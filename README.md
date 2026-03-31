@@ -38,7 +38,7 @@ Choose whichever style fits you:
 
 Recommended for most users.
 
-1. Download `ClaudeScope.dmg` from the [latest release](https://github.com/yourname/claude-scope/releases/latest)
+1. Download `ClaudeScope.dmg` from the [latest release](https://github.com/Kevin-Wei-sudo/claude-scope/releases/latest)
 2. Open the disk image and drag `ClaudeScope.app` into `Applications`
 3. Open `ClaudeScope` from `Applications`
 4. If macOS blocks the first launch, right-click the app and choose **Open**
@@ -48,7 +48,7 @@ Recommended for most users.
 If you publish your own tap, users can install with:
 
 ```sh
-brew install --cask yourname/tap/claude-scope
+brew install --cask Kevin-Wei-sudo/tap/claude-scope
 ```
 
 See [docs/HOMEBREW_CASK.md](docs/HOMEBREW_CASK.md) for the packaging setup.
@@ -58,14 +58,14 @@ See [docs/HOMEBREW_CASK.md](docs/HOMEBREW_CASK.md) for the packaging setup.
 For people who prefer a terminal installer:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/yourname/claude-scope/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Kevin-Wei-sudo/claude-scope/main/scripts/install.sh | bash
 ```
 
 Optional install methods:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/yourname/claude-scope/main/scripts/install.sh | bash -s -- --install-method zip
-curl -fsSL https://raw.githubusercontent.com/yourname/claude-scope/main/scripts/install.sh | bash -s -- --install-method git
+curl -fsSL https://raw.githubusercontent.com/Kevin-Wei-sudo/claude-scope/main/scripts/install.sh | bash -s -- --install-method zip
+curl -fsSL https://raw.githubusercontent.com/Kevin-Wei-sudo/claude-scope/main/scripts/install.sh | bash -s -- --install-method git
 ```
 
 ### First Launch
@@ -80,7 +80,7 @@ curl -fsSL https://raw.githubusercontent.com/yourname/claude-scope/main/scripts/
 Requires Xcode 15+ / Swift 5.9+ and macOS 14 (Sonoma) or later.
 
 ```sh
-git clone https://github.com/yourname/claude-scope.git
+git clone https://github.com/Kevin-Wei-sudo/claude-scope.git
 cd claude-scope
 make app            # build .app bundle
 make dmg            # build drag-to-Applications disk image
@@ -159,7 +159,7 @@ gh secret set SPARKLE_PRIVATE_KEY < /tmp/claude-scope.sparkle.key
 The appcast feed URL used by release builds is:
 
 ```text
-https://yourname.github.io/claude-scope/appcast.xml
+https://kevin-wei-sudo.github.io/claude-scope/appcast.xml
 ```
 
 ### Project structure

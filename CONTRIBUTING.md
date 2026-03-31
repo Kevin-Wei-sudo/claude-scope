@@ -11,7 +11,7 @@ Thanks for your interest in contributing! This guide will help you get set up an
 ## Getting started
 
 ```sh
-git clone https://github.com/yourname/claude-scope.git
+git clone https://github.com/Kevin-Wei-sudo/claude-scope.git
 cd claude-scope
 make app
 ```

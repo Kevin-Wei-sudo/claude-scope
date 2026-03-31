@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-OWNER="${REPO_OWNER:-Blimp-Labs}"
+OWNER="${REPO_OWNER:-Kevin-Wei-sudo}"
 REPO="${REPO_NAME:-claude-scope}"
 APP_NAME="ClaudeScope.app"
 INSTALL_METHOD="dmg"
