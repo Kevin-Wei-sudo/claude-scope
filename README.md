@@ -38,6 +38,12 @@ A tiny macOS menu bar app that shows your Claude API usage at a glance. Click it
 
 Choose whichever style fits you:
 
+Quickest Homebrew install:
+
+```sh
+brew install --cask Kevin-Wei-sudo/tap/claude-scope
+```
+
 ### 1. DMG
 
 Recommended for most users.
@@ -49,7 +55,7 @@ Recommended for most users.
 
 ### 2. Homebrew Cask
 
-If you publish your own tap, users can install with:
+Install directly from the published tap:
 
 ```sh
 brew install --cask Kevin-Wei-sudo/tap/claude-scope

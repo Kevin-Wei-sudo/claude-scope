@@ -27,6 +27,12 @@ ClaudeScope 是一个 macOS 菜单栏小工具，用来快速查看 Claude 用�
 
 你可以按自己习惯选择：
 
+最快的 Homebrew 安装方式：
+
+```sh
+brew install --cask Kevin-Wei-sudo/tap/claude-scope
+```
+
 ### 1. DMG 安装
 
 适合大多数用户。
@@ -38,7 +44,7 @@ ClaudeScope 是一个 macOS 菜单栏小工具，用来快速查看 Claude 用�
 
 ### 2. Homebrew Cask
 
-如果你之后发布了自己的 tap，可以这样安装：
+现在已经可以直接用下面的命令安装：
 
 ```sh
 brew install --cask Kevin-Wei-sudo/tap/claude-scope

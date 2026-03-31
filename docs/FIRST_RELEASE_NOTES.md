@@ -14,6 +14,12 @@ First public release of ClaudeScope, a macOS menu bar app for checking Claude us
 ## Install
 
 - DMG: download `ClaudeScope.dmg` from this release
+- Homebrew:
+
+```sh
+brew install --cask Kevin-Wei-sudo/tap/claude-scope
+```
+
 - Script:
 
 ```sh
