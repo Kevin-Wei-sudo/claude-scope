@@ -155,6 +155,8 @@ One-time repo setup:
 1. Enable GitHub Pages and set the source to `GitHub Actions`.
 2. Add a repository Actions secret named `SPARKLE_PRIVATE_KEY`.
 
+For Apple signing and notarization setup, see [docs/APPLE_SIGNING_NOTARIZATION.md](docs/APPLE_SIGNING_NOTARIZATION.md).
+
 Local source builds intentionally ship with Sparkle disabled unless `SU_FEED_URL` is injected during packaging. This prevents forks and local builds from auto-updating to upstream binaries.
 
 Manual installs should prefer the DMG. The ZIP remains the source of truth for Sparkle updates and appcast generation.
