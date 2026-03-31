@@ -2,6 +2,10 @@
   <img src="macos/Resources/icon.png" width="128" alt="ClaudeScope icon">
 </p>
 
+<p align="center">
+  English | <a href="./README.zh-CN.md">简体中文</a>
+</p>
+
 # ClaudeScope
 
 Have you ever found yourself refreshing the Claude usage page, wondering how close you are to hitting your rate limit? Yeah, I've been there too. So I built this.
