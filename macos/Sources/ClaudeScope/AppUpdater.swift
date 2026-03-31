@@ -39,7 +39,10 @@ final class AppUpdater: ObservableObject {
 
     func checkForUpdates() {
         guard isConfigured else {
-            lastError = "Updater is not configured for this build"
+            lastError = localizedString(
+                "error.updater_not_configured",
+                fallback: "Updater is not configured for this build"
+            )
             return
         }
 

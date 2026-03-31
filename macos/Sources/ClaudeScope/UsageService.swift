@@ -157,7 +157,10 @@ class UsageService: ObservableObject {
         if parts.count > 1 {
             let returnedState = String(parts[1])
             guard returnedState == oauthState else {
-                lastError = "OAuth state mismatch — try again"
+                lastError = localizedString(
+                    "error.oauth_state_mismatch",
+                    fallback: "OAuth state mismatch — try again"
+                )
                 isAwaitingCode = false
                 codeVerifier = nil
                 oauthState = nil
@@ -166,7 +169,10 @@ class UsageService: ObservableObject {
         }
 
         guard let verifier = codeVerifier else {
-            lastError = "No pending OAuth flow"
+            lastError = localizedString(
+                "error.no_pending_oauth_flow",
+                fallback: "No pending OAuth flow"
+            )
             isAwaitingCode = false
             return
         }
@@ -189,25 +195,40 @@ class UsageService: ObservableObject {
         do {
             let (data, response) = try await session.data(for: request)
             guard let http = response as? HTTPURLResponse else {
-                lastError = "Invalid token response"
+                lastError = localizedString(
+                    "error.invalid_token_response",
+                    fallback: "Invalid token response"
+                )
                 return
             }
             guard http.statusCode == 200 else {
                 let bodyStr = String(data: data, encoding: .utf8) ?? ""
-                lastError = "Token exchange failed: HTTP \(http.statusCode) \(bodyStr)"
+                lastError = localizedFormat(
+                    "error.token_exchange_failed",
+                    fallback: "Token exchange failed: HTTP %d %@",
+                    http.statusCode,
+                    bodyStr
+                )
                 return
             }
 
             guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                   let credentials = credentials(from: json) else {
-                lastError = "Could not parse token response"
+                lastError = localizedString(
+                    "error.token_response_parse_failed",
+                    fallback: "Could not parse token response"
+                )
                 return
             }
 
             do {
                 try saveCredentials(credentials)
             } catch {
-                lastError = "Failed to save credentials: \(error.localizedDescription)"
+                lastError = localizedFormat(
+                    "error.save_credentials_failed",
+                    fallback: "Failed to save credentials: %@",
+                    error.localizedDescription
+                )
                 return
             }
             isAuthenticated = true
@@ -219,7 +240,11 @@ class UsageService: ObservableObject {
             await fetchProfile()
             startPolling()
         } catch {
-            lastError = "Token exchange error: \(error.localizedDescription)"
+            lastError = localizedFormat(
+                "error.token_exchange",
+                fallback: "Token exchange error: %@",
+                error.localizedDescription
+            )
         }
     }
 
@@ -253,7 +278,7 @@ class UsageService: ObservableObject {
 
     func fetchUsage() async {
         guard loadCredentials() != nil else {
-            lastError = "Not signed in"
+            lastError = localizedString("error.not_signed_in", fallback: "Not signed in")
             isAuthenticated = false
             return
         }
@@ -270,12 +295,20 @@ class UsageService: ObservableObject {
                     retryAfter: retryAfter,
                     currentInterval: currentInterval
                 )
-                lastError = "Rate limited — backing off to \(Int(currentInterval))s"
+                lastError = localizedFormat(
+                    "error.rate_limited",
+                    fallback: "Rate limited — backing off to %d s",
+                    Int(currentInterval)
+                )
                 scheduleTimer()
                 return
             }
             guard http.statusCode == 200 else {
-                lastError = "HTTP \(http.statusCode)"
+                lastError = localizedFormat(
+                    "error.http_status",
+                    fallback: "HTTP %d",
+                    http.statusCode
+                )
                 return
             }
             let decoded = try JSONDecoder().decode(UsageResponse.self, from: data)
@@ -360,7 +393,7 @@ class UsageService: ObservableObject {
         expireSessionOnAuthFailure: Bool = true
     ) async throws -> (Data, HTTPURLResponse)? {
         guard let initialCredentials = loadCredentials() else {
-            lastError = "Not signed in"
+            lastError = localizedString("error.not_signed_in", fallback: "Not signed in")
             isAuthenticated = false
             return nil
         }
@@ -374,7 +407,10 @@ class UsageService: ObservableObject {
                         expireSession()
                     }
                 case .transientFailure:
-                    lastError = "Token refresh failed — will retry"
+                    lastError = localizedString(
+                        "error.token_refresh_failed_retry",
+                        fallback: "Token refresh failed — will retry"
+                    )
                 case .success:
                     break
                 }
@@ -424,7 +460,10 @@ class UsageService: ObservableObject {
             return nil
 
         case .transientFailure:
-            lastError = "Token refresh failed — will retry"
+            lastError = localizedString(
+                "error.token_refresh_failed_retry",
+                fallback: "Token refresh failed — will retry"
+            )
             return nil
         }
     }
@@ -577,7 +616,10 @@ class UsageService: ObservableObject {
         timer = nil
         refreshTask?.cancel()
         refreshTask = nil
-        lastError = "Session expired — please sign in again"
+        lastError = localizedString(
+            "error.session_expired",
+            fallback: "Session expired — please sign in again"
+        )
     }
 }
 

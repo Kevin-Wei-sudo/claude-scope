@@ -1,5 +1,5 @@
 import XCTest
-@testable import ClaudeUsageBar
+@testable import ClaudeScope
 
 final class StoredCredentialsTests: XCTestCase {
     func testStoreSavesAndLoadsCredentialBundle() throws {
@@ -98,8 +98,11 @@ final class StoredCredentialsTests: XCTestCase {
     private func makeStore() throws -> StoredCredentialsStore {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let legacyDirectory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        return StoredCredentialsStore(directoryURL: directory)
+        try FileManager.default.createDirectory(at: legacyDirectory, withIntermediateDirectories: true)
+        return StoredCredentialsStore(directoryURL: directory, legacyDirectoryURL: legacyDirectory)
     }
 
     private func permissions(for url: URL) throws -> Int {

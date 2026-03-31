@@ -1,0 +1,65 @@
+"language.follow_system" = "跟随系统";
+"language.english" = "English";
+"language.simplified_chinese" = "简体中文";
+
+"popover.title" = "ClaudeScope";
+"signin.prompt" = "登录后即可查看 Claude 用量。";
+"signin.button" = "登录 Claude";
+"button.quit" = "退出";
+"usage.five_hour_window" = "5 小时窗口";
+"usage.seven_day_window" = "7 天窗口";
+"usage.per_model" = "按模型统计（7天）";
+"usage.model.opus" = "Opus";
+"usage.model.sonnet" = "Sonnet";
+"usage.model.opus_only" = "Opus模型";
+"usage.model.sonnet_only" = "Sonnet模型";
+"usage.extra" = "额外额度";
+"usage.updated_ago" = "更新时间：%@";
+"button.refresh" = "刷新";
+"button.check_updates" = "检查更新…";
+"button.settings" = "设置…";
+"setup.welcome" = "欢迎";
+"setup.configure" = "先完成偏好设置，再开始使用。";
+"setup.notifications" = "通知";
+"setup.polling_interval" = "轮询间隔";
+"setup.frequent_polling_warning" = "轮询过于频繁时，可能触发限流";
+"button.get_started" = "开始";
+"code_entry.prompt" = "请粘贴浏览器中的代码：";
+"code_entry.placeholder" = "code#state";
+"button.cancel" = "取消";
+"button.submit" = "提交";
+"usage.resets" = "重置时间：%@";
+"value.off" = "关闭";
+
+"settings.general" = "常规";
+"settings.polling_interval" = "轮询间隔";
+"settings.notifications" = "通知";
+"settings.account" = "账户";
+"settings.sign_out" = "退出登录";
+"settings.language" = "语言";
+"launch_at_login" = "登录时启动";
+"launch_at_login.install_required" = "请先将应用安装到“应用程序”文件夹，才能管理登录时启动。";
+"launch_at_login.update_failed" = "无法更新“登录时启动”设置。";
+
+"chart.no_history" = "暂无历史数据。";
+"notification.title" = "ClaudeScope";
+"notification.body" = "%@ 用量已达到 %d%%";
+"window.5hour" = "5 小时窗口";
+"window.7day" = "7 天窗口";
+"window.extra" = "额外用量";
+
+"error.updater_not_configured" = "当前版本未配置更新功能";
+"error.oauth_state_mismatch" = "OAuth 状态不匹配，请重试";
+"error.no_pending_oauth_flow" = "当前没有待处理的 OAuth 流程";
+"error.invalid_token_response" = "无效的令牌响应";
+"error.token_exchange_failed" = "令牌交换失败：HTTP %d %@";
+"error.token_response_parse_failed" = "无法解析令牌响应";
+"error.save_credentials_failed" = "保存凭据失败：%@";
+"error.token_exchange" = "令牌交换出错：%@";
+"error.not_signed_in" = "尚未登录";
+"error.rate_limited" = "已触发限流，刷新间隔已调整为 %d 秒";
+"error.http_status" = "HTTP %d";
+"error.token_refresh_failed_retry" = "令牌刷新失败，将稍后重试";
+"error.session_expired" = "会话已过期，请重新登录";
+
+"polling.option.not_recommended" = "%@（不推荐）";

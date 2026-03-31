@@ -27,9 +27,14 @@ struct StoredCredentialsStore {
     let directoryURL: URL
     let credentialsFileURL: URL
     let legacyTokenFileURL: URL
+    let legacyDirectoryURL: URL
+    let legacyCredentialsFileURL: URL
+    let legacyLegacyTokenFileURL: URL
 
     init(
         directoryURL: URL = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent(".config/claude-scope", isDirectory: true),
+        legacyDirectoryURL: URL = FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent(".config/claude-usage-bar", isDirectory: true),
         fileManager: FileManager = .default
     ) {
@@ -37,6 +42,9 @@ struct StoredCredentialsStore {
         self.directoryURL = directoryURL
         self.credentialsFileURL = directoryURL.appendingPathComponent("credentials.json")
         self.legacyTokenFileURL = directoryURL.appendingPathComponent("token")
+        self.legacyDirectoryURL = legacyDirectoryURL
+        self.legacyCredentialsFileURL = legacyDirectoryURL.appendingPathComponent("credentials.json")
+        self.legacyLegacyTokenFileURL = legacyDirectoryURL.appendingPathComponent("token")
     }
 
     func save(_ credentials: StoredCredentials) throws {
@@ -53,11 +61,28 @@ struct StoredCredentialsStore {
             return credentials
         }
 
+        if let data = try? Data(contentsOf: legacyCredentialsFileURL),
+           let credentials = try? Self.decoder.decode(StoredCredentials.self, from: data) {
+            return credentials
+        }
+
         guard let data = try? Data(contentsOf: legacyTokenFileURL),
               let token = String(data: data, encoding: .utf8)?
                 .trimmingCharacters(in: .whitespacesAndNewlines),
               token.isEmpty == false else {
-            return nil
+            guard let data = try? Data(contentsOf: legacyLegacyTokenFileURL),
+                  let token = String(data: data, encoding: .utf8)?
+                    .trimmingCharacters(in: .whitespacesAndNewlines),
+                  token.isEmpty == false else {
+                return nil
+            }
+
+            return StoredCredentials(
+                accessToken: token,
+                refreshToken: nil,
+                expiresAt: nil,
+                scopes: defaultScopes
+            )
         }
 
         return StoredCredentials(
@@ -71,6 +96,8 @@ struct StoredCredentialsStore {
     func delete() {
         try? fileManager.removeItem(at: credentialsFileURL)
         try? fileManager.removeItem(at: legacyTokenFileURL)
+        try? fileManager.removeItem(at: legacyCredentialsFileURL)
+        try? fileManager.removeItem(at: legacyLegacyTokenFileURL)
     }
 
     private func ensureDirectoryExists() throws {

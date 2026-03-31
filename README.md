@@ -1,15 +1,15 @@
 <p align="center">
-  <img src="macos/Resources/icon.png" width="128" alt="Claude Usage Bar icon">
+  <img src="macos/Resources/icon.png" width="128" alt="ClaudeScope icon">
 </p>
 
-# Claude Usage Bar
+# ClaudeScope
 
 Have you ever found yourself refreshing the Claude usage page, wondering how close you are to hitting your rate limit? Yeah, I've been there too. So I built this.
 
 Now it's just a glimpse away — always sitting at the top of your screen.
 
 <p align="center">
-  <img src="macos/Resources/demo.png" width="400" alt="Claude Usage Bar demo">
+  <img src="macos/Resources/demo.png" width="400" alt="ClaudeScope demo">
 </p>
 
 ![macOS 14+](https://img.shields.io/badge/macOS-14%2B-blue)
@@ -32,20 +32,56 @@ A tiny macOS menu bar app that shows your Claude API usage at a glance. Click it
 
 ## Install
 
-### Download
+Choose whichever style fits you:
 
-1. Download `ClaudeUsageBar.dmg` from the [latest release](https://github.com/Blimp-Labs/claude-usage-bar/releases/latest)
-2. Open the disk image and drag `ClaudeUsageBar.app` into `Applications`
-3. Launch the app from `/Applications`
-4. macOS may require right-click → **Open** on first launch
+### 1. DMG
 
-### Build from source
+Recommended for most users.
+
+1. Download `ClaudeScope.dmg` from the [latest release](https://github.com/yourname/claude-scope/releases/latest)
+2. Open the disk image and drag `ClaudeScope.app` into `Applications`
+3. Open `ClaudeScope` from `Applications`
+4. If macOS blocks the first launch, right-click the app and choose **Open**
+
+### 2. Homebrew Cask
+
+If you publish your own tap, users can install with:
+
+```sh
+brew install --cask yourname/tap/claude-scope
+```
+
+See [docs/HOMEBREW_CASK.md](docs/HOMEBREW_CASK.md) for the packaging setup.
+
+### 3. One-Line Install Script
+
+For people who prefer a terminal installer:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/yourname/claude-scope/main/scripts/install.sh | bash
+```
+
+Optional install methods:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/yourname/claude-scope/main/scripts/install.sh | bash -s -- --install-method zip
+curl -fsSL https://raw.githubusercontent.com/yourname/claude-scope/main/scripts/install.sh | bash -s -- --install-method git
+```
+
+### First Launch
+
+1. Launch the app — a menu bar icon appears
+2. Click the icon → **Sign in with Claude**
+3. Authorize in your browser
+4. Paste the returned code into the app
+
+### 4. Build From Source
 
 Requires Xcode 15+ / Swift 5.9+ and macOS 14 (Sonoma) or later.
 
 ```sh
-git clone https://github.com/Blimp-Labs/claude-usage-bar.git
-cd claude-usage-bar
+git clone https://github.com/yourname/claude-scope.git
+cd claude-scope
 make app            # build .app bundle
 make dmg            # build drag-to-Applications disk image
 make install        # copy to /Applications
@@ -53,11 +89,7 @@ make install        # copy to /Applications
 
 ## Usage
 
-1. Launch the app — a menu bar icon appears
-2. Click the icon → **Sign in with Claude** → authorize in your browser
-3. Paste the code back into the app
-4. The icon updates automatically (default: every 30 minutes)
-5. Release builds show **Check for Updates…** in the popover so you can pull newer versions without re-downloading manually
+The icon updates automatically after sign-in (default: every 30 minutes). Release builds also show **Check for Updates…** in the popover so you can pull newer versions without re-downloading manually.
 
 Click the icon anytime to see:
 - 5-hour and 7-day usage with progress bars and reset timers
@@ -67,7 +99,7 @@ Click the icon anytime to see:
 
 ## Data storage
 
-All data is stored locally in `~/.config/claude-usage-bar/`:
+All data is stored locally in `~/.config/claude-scope/`.
 
 | File | Purpose |
 |------|---------|
@@ -94,7 +126,7 @@ make clean          # remove build artifacts
 This repo now uses a tag-driven release flow. Pushing a `v*` tag will:
 
 - build the `.app` bundle once
-- produce `ClaudeUsageBar.zip` for Sparkle and `ClaudeUsageBar.dmg` for manual installs
+- produce `ClaudeScope.zip` for Sparkle and `ClaudeScope.dmg` for manual installs
 - verify the packaged artifacts contain the expected app bundle resources and updater framework
 - create the GitHub Release
 - reuse GitHub-generated release notes for both the GitHub Release and the Sparkle update entry
@@ -120,22 +152,22 @@ Manual installs should prefer the DMG. The ZIP remains the source of truth for S
 You can export the current Sparkle private key from your local Keychain with:
 
 ```sh
-macos/.build/artifacts/sparkle/Sparkle/bin/generate_keys --account claude-usage-bar -x /tmp/claude-usage-bar.sparkle.key
-gh secret set SPARKLE_PRIVATE_KEY < /tmp/claude-usage-bar.sparkle.key
+macos/.build/artifacts/sparkle/Sparkle/bin/generate_keys --account claude-scope -x /tmp/claude-scope.sparkle.key
+gh secret set SPARKLE_PRIVATE_KEY < /tmp/claude-scope.sparkle.key
 ```
 
 The appcast feed URL used by release builds is:
 
 ```text
-https://blimp-labs.github.io/claude-usage-bar/appcast.xml
+https://yourname.github.io/claude-scope/appcast.xml
 ```
 
 ### Project structure
 
 ```
 macos/                           # macOS menu bar app (Swift/SwiftUI)
-├── Sources/ClaudeUsageBar/
-│   ├── ClaudeUsageBarApp.swift      # App entry point, menu bar setup
+├── Sources/ClaudeScope/
+│   ├── ClaudeScopeApp.swift         # App entry point, menu bar setup
 │   ├── UsageService.swift           # OAuth, polling, API calls
 │   ├── UsageModel.swift             # API response types
 │   ├── UsageHistoryModel.swift      # History data types, time ranges
@@ -150,7 +182,7 @@ macos/                           # macOS menu bar app (Swift/SwiftUI)
 │   └── Resources/
 │       ├── claude-logo.png          # Pre-rendered menu bar logo (512px)
 │       └── en.lproj/Localizable.strings
-├── Tests/ClaudeUsageBarTests/
+├── Tests/ClaudeScopeTests/
 ├── Resources/                       # App bundle resources (not SwiftPM)
 │   ├── Info.plist
 │   ├── Assets.xcassets/             # App icon

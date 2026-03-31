@@ -5,6 +5,11 @@ struct UsageChartView: View {
     @ObservedObject var historyService: UsageHistoryService
     @State private var selectedRange: TimeRange = .day1
     @State private var hoverDate: Date?
+    @AppStorage(AppLanguage.storageKey) private var appLanguageRaw = AppLanguage.system.rawValue
+
+    private var appLanguage: AppLanguage {
+        AppLanguage.from(appLanguageRaw)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -19,7 +24,7 @@ struct UsageChartView: View {
             let points = historyService.downsampledPoints(for: selectedRange)
 
             if points.isEmpty {
-                Text("No history data yet.")
+                Text(localizedString("chart.no_history", fallback: "No history data yet.", language: appLanguage))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, minHeight: 120, alignment: .center)
@@ -133,7 +138,7 @@ struct UsageChartView: View {
     @ViewBuilder
     private func tooltipView(date: Date, pct5h: Double, pct7d: Double) -> some View {
         VStack(spacing: 2) {
-            Text(date, format: tooltipDateFormat)
+            Text(date, format: tooltipDateFormat.locale(appLanguage.locale))
                 .font(.system(size: 9))
                 .foregroundStyle(.secondary)
             HStack(spacing: 6) {
@@ -155,24 +160,24 @@ struct UsageChartView: View {
     private var xAxisFormat: Date.FormatStyle {
         switch selectedRange {
         case .hour1:
-            return .dateTime.hour().minute()
+            return .dateTime.hour().minute().locale(appLanguage.locale)
         case .hour6, .day1:
-            return .dateTime.hour()
+            return .dateTime.hour().locale(appLanguage.locale)
         case .day7:
-            return .dateTime.weekday(.abbreviated)
+            return .dateTime.weekday(.abbreviated).locale(appLanguage.locale)
         case .day30:
-            return .dateTime.day().month(.abbreviated)
+            return .dateTime.day().month(.abbreviated).locale(appLanguage.locale)
         }
     }
 
     private var tooltipDateFormat: Date.FormatStyle {
         switch selectedRange {
         case .hour1, .hour6, .day1:
-            return .dateTime.hour().minute()
+            return .dateTime.hour().minute().locale(appLanguage.locale)
         case .day7:
-            return .dateTime.weekday(.abbreviated).hour().minute()
+            return .dateTime.weekday(.abbreviated).hour().minute().locale(appLanguage.locale)
         case .day30:
-            return .dateTime.month(.abbreviated).day().hour()
+            return .dateTime.month(.abbreviated).day().hour().locale(appLanguage.locale)
         }
     }
 }

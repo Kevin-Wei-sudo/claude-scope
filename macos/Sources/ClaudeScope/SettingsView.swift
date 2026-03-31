@@ -4,47 +4,58 @@ import ServiceManagement
 struct SettingsWindowContent: View {
     @ObservedObject var service: UsageService
     @ObservedObject var notificationService: NotificationService
+    @AppStorage(AppLanguage.storageKey) private var appLanguageRaw = AppLanguage.system.rawValue
+
+    private var appLanguage: AppLanguage {
+        AppLanguage.from(appLanguageRaw)
+    }
 
     var body: some View {
         Form {
-            Section("General") {
+            Section(localizedString("settings.general", fallback: "General", language: appLanguage)) {
                 LaunchAtLoginToggle()
 
-                Picker("Polling Interval", selection: Binding(
+                Picker(localizedString("settings.language", fallback: "Language", language: appLanguage), selection: $appLanguageRaw) {
+                    Text(localizedString("language.follow_system", fallback: "Follow System", language: appLanguage)).tag(AppLanguage.system.rawValue)
+                    Text(localizedString("language.english", fallback: "English", language: appLanguage)).tag(AppLanguage.english.rawValue)
+                    Text(localizedString("language.simplified_chinese", fallback: "Simplified Chinese", language: appLanguage)).tag(AppLanguage.simplifiedChinese.rawValue)
+                }
+
+                Picker(localizedString("settings.polling_interval", fallback: "Polling Interval", language: appLanguage), selection: Binding(
                     get: { service.pollingMinutes },
                     set: { service.updatePollingInterval($0) }
                 )) {
                     ForEach(UsageService.pollingOptions, id: \.self) { mins in
-                        Text(pollingOptionLabel(for: mins))
+                        Text(pollingOptionLabel(for: mins, locale: appLanguage.locale))
                             .tag(mins)
                     }
                 }
             }
 
-            Section("Notifications") {
+            Section(localizedString("settings.notifications", fallback: "Notifications", language: appLanguage)) {
                 ThresholdSlider(
-                    label: "5-hour window",
+                    label: localizedString("window.5hour", fallback: "5-hour window", language: appLanguage),
                     value: notificationService.threshold5h,
                     onChange: { notificationService.setThreshold5h($0) }
                 )
                 ThresholdSlider(
-                    label: "7-day window",
+                    label: localizedString("window.7day", fallback: "7-day window", language: appLanguage),
                     value: notificationService.threshold7d,
                     onChange: { notificationService.setThreshold7d($0) }
                 )
                 ThresholdSlider(
-                    label: "Extra usage",
+                    label: localizedString("window.extra", fallback: "Extra usage", language: appLanguage),
                     value: notificationService.thresholdExtra,
                     onChange: { notificationService.setThresholdExtra($0) }
                 )
             }
 
             if service.isAuthenticated {
-                Section("Account") {
+                Section(localizedString("settings.account", fallback: "Account", language: appLanguage)) {
                     if let email = service.accountEmail {
                         Text(email)
                     }
-                    Button("Sign Out") {
+                    Button(localizedString("settings.sign_out", fallback: "Sign Out", language: appLanguage)) {
                         service.signOut()
                     }
                 }
@@ -74,6 +85,11 @@ struct LaunchAtLoginToggle: View {
     @StateObject private var model: LaunchAtLoginModel
     private let controlSize: ControlSize
     private let useSwitchStyle: Bool
+    @AppStorage(AppLanguage.storageKey) private var appLanguageRaw = AppLanguage.system.rawValue
+
+    private var appLanguage: AppLanguage {
+        AppLanguage.from(appLanguageRaw)
+    }
 
     init(
         controlSize: ControlSize = .regular,
@@ -101,7 +117,7 @@ struct LaunchAtLoginToggle: View {
 
     @ViewBuilder
     private var toggle: some View {
-        let baseToggle = Toggle("Launch at Login", isOn: Binding(
+        let baseToggle = Toggle(localizedString("launch_at_login", fallback: "Launch at Login", language: appLanguage), isOn: Binding(
             get: { model.isEnabled },
             set: { model.setEnabled($0) }
         ))
@@ -126,7 +142,10 @@ final class LaunchAtLoginModel: ObservableObject {
         isSupported = supportsLaunchAtLoginManagement(appURL: bundleURL)
 
         guard isSupported else {
-            message = "Install the app in Applications to manage launch at login."
+            message = localizedString(
+                "launch_at_login.install_required",
+                fallback: "Install the app in Applications to manage launch at login."
+            )
             return
         }
 
@@ -146,7 +165,10 @@ final class LaunchAtLoginModel: ObservableObject {
             message = nil
         } catch {
             isEnabled = SMAppService.mainApp.status == .enabled
-            message = "Could not update launch at login."
+            message = localizedString(
+                "launch_at_login.update_failed",
+                fallback: "Could not update launch at login."
+            )
         }
     }
 }
@@ -177,6 +199,11 @@ private struct ThresholdSlider: View {
     let label: String
     let value: Int
     let onChange: (Int) -> Void
+    @AppStorage(AppLanguage.storageKey) private var appLanguageRaw = AppLanguage.system.rawValue
+
+    private var appLanguage: AppLanguage {
+        AppLanguage.from(appLanguageRaw)
+    }
 
     var body: some View {
         LabeledContent {
@@ -190,7 +217,7 @@ private struct ThresholdSlider: View {
             )
         } label: {
             Text(label)
-            Text(value > 0 ? "\(value)%" : "Off")
+            Text(value > 0 ? "\(value)%" : localizedString("value.off", fallback: "Off", language: appLanguage))
                 .foregroundStyle(.secondary)
         }
         .alignmentGuide(.firstTextBaseline) { d in

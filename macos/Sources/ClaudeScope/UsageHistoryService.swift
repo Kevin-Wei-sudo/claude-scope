@@ -15,9 +15,15 @@ class UsageHistoryService: ObservableObject {
 
     private static var historyFileURL: URL {
         let dir = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent(".config/claude-usage-bar", isDirectory: true)
+            .appendingPathComponent(".config/claude-scope", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir.appendingPathComponent("history.json")
+    }
+
+    private static var legacyHistoryFileURL: URL {
+        FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent(".config/claude-usage-bar", isDirectory: true)
+            .appendingPathComponent("history.json")
     }
 
     init() {
@@ -41,7 +47,12 @@ class UsageHistoryService: ObservableObject {
     // MARK: - Load
 
     func loadHistory() {
-        let url = Self.historyFileURL
+        let url: URL
+        if FileManager.default.fileExists(atPath: Self.historyFileURL.path) {
+            url = Self.historyFileURL
+        } else {
+            url = Self.legacyHistoryFileURL
+        }
         guard FileManager.default.fileExists(atPath: url.path) else { return }
 
         do {

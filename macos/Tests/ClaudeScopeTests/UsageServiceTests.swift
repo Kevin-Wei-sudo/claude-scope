@@ -1,5 +1,5 @@
 import XCTest
-@testable import ClaudeUsageBar
+@testable import ClaudeScope
 
 @MainActor
 final class UsageServiceTests: XCTestCase {
@@ -157,7 +157,7 @@ final class UsageServiceTests: XCTestCase {
         await service.fetchUsage()
 
         XCTAssertTrue(service.isAuthenticated)
-        XCTAssertEqual(service.lastError, "Rate limited — backing off to 3600s")
+        XCTAssertEqual(service.lastError, "Rate limited — backing off to 3,600 s")
 
         let saved = try XCTUnwrap(store.load(defaultScopes: UsageService.defaultOAuthScopes))
         XCTAssertEqual(saved.accessToken, "new-access")

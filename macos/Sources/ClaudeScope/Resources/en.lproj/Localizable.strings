@@ -1,0 +1,65 @@
+"language.follow_system" = "Follow System";
+"language.english" = "English";
+"language.simplified_chinese" = "Simplified Chinese";
+
+"popover.title" = "ClaudeScope";
+"signin.prompt" = "Sign in to view your usage.";
+"signin.button" = "Sign in with Claude";
+"button.quit" = "Quit";
+"usage.five_hour_window" = "5-Hour Window";
+"usage.seven_day_window" = "7-Day Window";
+"usage.per_model" = "Per-Model (7 day)";
+"usage.model.opus" = "Opus";
+"usage.model.sonnet" = "Sonnet";
+"usage.model.opus_only" = "Opus only";
+"usage.model.sonnet_only" = "Sonnet only";
+"usage.extra" = "Extra Usage";
+"usage.updated_ago" = "Updated %@";
+"button.refresh" = "Refresh";
+"button.check_updates" = "Check for Updates…";
+"button.settings" = "Settings…";
+"setup.welcome" = "Welcome";
+"setup.configure" = "Configure your preferences to get started.";
+"setup.notifications" = "Notifications";
+"setup.polling_interval" = "Polling Interval";
+"setup.frequent_polling_warning" = "Frequent polling may cause rate limiting";
+"button.get_started" = "Get Started";
+"code_entry.prompt" = "Paste the code from your browser:";
+"code_entry.placeholder" = "code#state";
+"button.cancel" = "Cancel";
+"button.submit" = "Submit";
+"usage.resets" = "Resets %@";
+"value.off" = "Off";
+
+"settings.general" = "General";
+"settings.polling_interval" = "Polling Interval";
+"settings.notifications" = "Notifications";
+"settings.account" = "Account";
+"settings.sign_out" = "Sign Out";
+"settings.language" = "Language";
+"launch_at_login" = "Launch at Login";
+"launch_at_login.install_required" = "Install the app in Applications to manage launch at login.";
+"launch_at_login.update_failed" = "Could not update launch at login.";
+
+"chart.no_history" = "No history data yet.";
+"notification.title" = "ClaudeScope";
+"notification.body" = "%@ usage has reached %d%%";
+"window.5hour" = "5-hour window";
+"window.7day" = "7-day window";
+"window.extra" = "Extra usage";
+
+"error.updater_not_configured" = "Updater is not configured for this build";
+"error.oauth_state_mismatch" = "OAuth state mismatch — try again";
+"error.no_pending_oauth_flow" = "No pending OAuth flow";
+"error.invalid_token_response" = "Invalid token response";
+"error.token_exchange_failed" = "Token exchange failed: HTTP %d %@";
+"error.token_response_parse_failed" = "Could not parse token response";
+"error.save_credentials_failed" = "Failed to save credentials: %@";
+"error.token_exchange" = "Token exchange error: %@";
+"error.not_signed_in" = "Not signed in";
+"error.rate_limited" = "Rate limited — backing off to %d s";
+"error.http_status" = "HTTP %d";
+"error.token_refresh_failed_retry" = "Token refresh failed — will retry";
+"error.session_expired" = "Session expired — please sign in again";
+
+"polling.option.not_recommended" = "%@ (not recommended)";

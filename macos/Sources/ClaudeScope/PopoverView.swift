@@ -6,6 +6,11 @@ struct PopoverView: View {
     @ObservedObject var notificationService: NotificationService
     @ObservedObject var appUpdater: AppUpdater
     @AppStorage("setupComplete") private var setupComplete = false
+    @AppStorage(AppLanguage.storageKey) private var appLanguageRaw = AppLanguage.system.rawValue
+
+    private var appLanguage: AppLanguage {
+        AppLanguage.from(appLanguageRaw)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -16,7 +21,7 @@ struct PopoverView: View {
                     onComplete: { setupComplete = true }
                 )
             } else {
-                Text("Claude Usage")
+                Text(localizedString("popover.title", fallback: "ClaudeScope", language: appLanguage))
                     .font(.headline)
                 if !service.isAuthenticated {
                     signInView
@@ -34,11 +39,11 @@ struct PopoverView: View {
         if service.isAwaitingCode {
             CodeEntryView(service: service)
         } else {
-            Text("Sign in to view your usage.")
+            Text(localizedString("signin.prompt", fallback: "Sign in to view your usage.", language: appLanguage))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 
-            Button("Sign in with Claude") {
+            Button(localizedString("signin.button", fallback: "Sign in with Claude", language: appLanguage)) {
                 service.startOAuthFlow()
             }
             .buttonStyle(.borderedProminent)
@@ -55,7 +60,7 @@ struct PopoverView: View {
         HStack {
             settingsButton
             Spacer()
-            Button("Quit") {
+            Button(localizedString("button.quit", fallback: "Quit", language: appLanguage)) {
                 NSApplication.shared.terminate(nil)
             }
             .buttonStyle(.borderless)
@@ -65,24 +70,33 @@ struct PopoverView: View {
     @ViewBuilder
     private var usageView: some View {
         UsageBucketRow(
-            label: "5-Hour Window",
+            label: localizedString("usage.five_hour_window", fallback: "5-Hour Window", language: appLanguage),
             bucket: service.usage?.fiveHour
         )
 
         UsageBucketRow(
-            label: "7-Day Window",
+            label: localizedString("usage.seven_day_window", fallback: "7-Day Window", language: appLanguage),
             bucket: service.usage?.sevenDay
         )
 
-        if let opus = service.usage?.sevenDayOpus,
-           opus.utilization != nil {
+        let opus = service.usage?.sevenDayOpus
+        let sonnet = service.usage?.sevenDaySonnet
+        if (opus?.utilization != nil) || (sonnet?.utilization != nil) {
             Divider()
-            Text("Per-Model (7 day)")
+            Text(localizedString("usage.per_model", fallback: "Per-Model (7 day)", language: appLanguage))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-            UsageBucketRow(label: "Opus", bucket: opus)
-            if let sonnet = service.usage?.sevenDaySonnet {
-                UsageBucketRow(label: "Sonnet", bucket: sonnet)
+            if let opus, opus.utilization != nil {
+                UsageBucketRow(
+                    label: localizedString("usage.model.opus_only", fallback: "Opus only", language: appLanguage),
+                    bucket: opus
+                )
+            }
+            if let sonnet, sonnet.utilization != nil {
+                UsageBucketRow(
+                    label: localizedString("usage.model.sonnet_only", fallback: "Sonnet only", language: appLanguage),
+                    bucket: sonnet
+                )
             }
         }
 
@@ -112,7 +126,17 @@ struct PopoverView: View {
 
         HStack(spacing: 12) {
             if let updated = service.lastUpdated {
-                Text("Updated \(updated, style: .relative) ago")
+                Text(
+                    localizedFormat(
+                        "usage.updated_ago",
+                        fallback: "Updated %@ ago",
+                        language: appLanguage,
+                        updated.formatted(
+                            .relative(presentation: .named)
+                                .locale(appLanguage.locale)
+                        )
+                    )
+                )
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -122,20 +146,20 @@ struct PopoverView: View {
         HStack(spacing: 12) {
             settingsButton
             Spacer()
-            Button("Refresh") {
+            Button(localizedString("button.refresh", fallback: "Refresh", language: appLanguage)) {
                 Task { await service.fetchUsage() }
             }
             .buttonStyle(.borderless)
             .font(.caption)
             if appUpdater.isConfigured {
-                Button("Check for Updates…") {
+                Button(localizedString("button.check_updates", fallback: "Check for Updates…", language: appLanguage)) {
                     appUpdater.checkForUpdates()
                 }
                 .buttonStyle(.borderless)
                 .font(.caption)
                 .disabled(!appUpdater.canCheckForUpdates)
             }
-            Button("Quit") { NSApplication.shared.terminate(nil) }
+            Button(localizedString("button.quit", fallback: "Quit", language: appLanguage)) { NSApplication.shared.terminate(nil) }
                 .buttonStyle(.borderless)
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -144,7 +168,7 @@ struct PopoverView: View {
 
     private var settingsButton: some View {
         SettingsLink {
-            Text("Settings…")
+            Text(localizedString("button.settings", fallback: "Settings…", language: appLanguage))
         }
         .buttonStyle(.borderless)
         .font(.caption)
@@ -157,11 +181,16 @@ private struct SetupView: View {
     @ObservedObject var service: UsageService
     @ObservedObject var notificationService: NotificationService
     var onComplete: () -> Void
+    @AppStorage(AppLanguage.storageKey) private var appLanguageRaw = AppLanguage.system.rawValue
+
+    private var appLanguage: AppLanguage {
+        AppLanguage.from(appLanguageRaw)
+    }
 
     var body: some View {
-        Text("Welcome")
+        Text(localizedString("setup.welcome", fallback: "Welcome", language: appLanguage))
             .font(.headline)
-        Text("Configure your preferences to get started.")
+        Text(localizedString("setup.configure", fallback: "Configure your preferences to get started.", language: appLanguage))
             .font(.subheadline)
             .foregroundStyle(.secondary)
 
@@ -172,22 +201,22 @@ private struct SetupView: View {
         Divider()
 
         VStack(alignment: .leading, spacing: 8) {
-            Text("Notifications")
+            Text(localizedString("setup.notifications", fallback: "Notifications", language: appLanguage))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 
             SetupThresholdSlider(
-                label: "5-hour window",
+                label: localizedString("window.5hour", fallback: "5-hour window", language: appLanguage),
                 value: notificationService.threshold5h,
                 onChange: { notificationService.setThreshold5h($0) }
             )
             SetupThresholdSlider(
-                label: "7-day window",
+                label: localizedString("window.7day", fallback: "7-day window", language: appLanguage),
                 value: notificationService.threshold7d,
                 onChange: { notificationService.setThreshold7d($0) }
             )
             SetupThresholdSlider(
-                label: "Extra usage",
+                label: localizedString("window.extra", fallback: "Extra usage", language: appLanguage),
                 value: notificationService.thresholdExtra,
                 onChange: { notificationService.setThresholdExtra($0) }
             )
@@ -196,7 +225,7 @@ private struct SetupView: View {
         Divider()
 
         VStack(alignment: .leading, spacing: 6) {
-            Text("Polling Interval")
+            Text(localizedString("setup.polling_interval", fallback: "Polling Interval", language: appLanguage))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 
@@ -205,7 +234,7 @@ private struct SetupView: View {
                 set: { service.updatePollingInterval($0) }
             )) {
                 ForEach(UsageService.pollingOptions, id: \.self) { mins in
-                    Text(localizedPollingInterval(for: mins, locale: .autoupdatingCurrent))
+                    Text(localizedPollingInterval(for: mins, locale: appLanguage.locale))
                         .tag(mins)
                 }
             }
@@ -213,7 +242,7 @@ private struct SetupView: View {
             .labelsHidden()
 
             if isDiscouragedPollingOption(service.pollingMinutes) {
-                Text("Frequent polling may cause rate limiting")
+                Text(localizedString("setup.frequent_polling_warning", fallback: "Frequent polling may cause rate limiting", language: appLanguage))
                     .font(.caption2)
                     .foregroundStyle(.orange)
             }
@@ -221,7 +250,7 @@ private struct SetupView: View {
 
         Divider()
 
-        Button("Get Started") {
+        Button(localizedString("button.get_started", fallback: "Get Started", language: appLanguage)) {
             onComplete()
         }
         .buttonStyle(.borderedProminent)
@@ -229,7 +258,7 @@ private struct SetupView: View {
 
         HStack {
             Spacer()
-            Button("Quit") { NSApplication.shared.terminate(nil) }
+            Button(localizedString("button.quit", fallback: "Quit", language: appLanguage)) { NSApplication.shared.terminate(nil) }
                 .buttonStyle(.borderless)
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -242,14 +271,19 @@ private struct SetupView: View {
 private struct CodeEntryView: View {
     @ObservedObject var service: UsageService
     @State private var code = ""
+    @AppStorage(AppLanguage.storageKey) private var appLanguageRaw = AppLanguage.system.rawValue
+
+    private var appLanguage: AppLanguage {
+        AppLanguage.from(appLanguageRaw)
+    }
 
     var body: some View {
-        Text("Paste the code from your browser:")
+        Text(localizedString("code_entry.prompt", fallback: "Paste the code from your browser:", language: appLanguage))
             .font(.subheadline)
             .foregroundStyle(.secondary)
 
         HStack(spacing: 4) {
-            TextField("code#state", text: $code)
+            TextField(localizedString("code_entry.placeholder", fallback: "code#state", language: appLanguage), text: $code)
                 .textFieldStyle(.roundedBorder)
                 .font(.system(.body, design: .monospaced))
                 .onSubmit { submit() }
@@ -264,12 +298,12 @@ private struct CodeEntryView: View {
         }
 
         HStack {
-            Button("Cancel") {
+            Button(localizedString("button.cancel", fallback: "Cancel", language: appLanguage)) {
                 service.isAwaitingCode = false
             }
             .buttonStyle(.borderless)
             Spacer()
-            Button("Submit") { submit() }
+            Button(localizedString("button.submit", fallback: "Submit", language: appLanguage)) { submit() }
                 .buttonStyle(.borderedProminent)
                 .disabled(code.isEmpty)
         }
@@ -284,6 +318,11 @@ private struct CodeEntryView: View {
 private struct UsageBucketRow: View {
     let label: String
     let bucket: UsageBucket?
+    @AppStorage(AppLanguage.storageKey) private var appLanguageRaw = AppLanguage.system.rawValue
+
+    private var appLanguage: AppLanguage {
+        AppLanguage.from(appLanguageRaw)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -298,7 +337,17 @@ private struct UsageBucketRow: View {
             ProgressView(value: (bucket?.utilization ?? 0) / 100.0, total: 1.0)
                 .tint(colorForPct((bucket?.utilization ?? 0) / 100.0))
             if let resetDate = bucket?.resetsAtDate {
-                Text("Resets \(resetDate, style: .relative)")
+                Text(
+                    localizedFormat(
+                        "usage.resets",
+                        fallback: "Resets %@",
+                        language: appLanguage,
+                        resetDate.formatted(
+                            .relative(presentation: .named)
+                                .locale(appLanguage.locale)
+                        )
+                    )
+                )
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
@@ -313,10 +362,15 @@ private struct UsageBucketRow: View {
 
 private struct ExtraUsageRow: View {
     let extra: ExtraUsage
+    @AppStorage(AppLanguage.storageKey) private var appLanguageRaw = AppLanguage.system.rawValue
+
+    private var appLanguage: AppLanguage {
+        AppLanguage.from(appLanguageRaw)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Extra Usage")
+            Text(localizedString("usage.extra", fallback: "Extra Usage", language: appLanguage))
                 .font(.subheadline)
             if let used = extra.usedCreditsAmount, let limit = extra.monthlyLimitAmount {
                 HStack {
@@ -341,6 +395,11 @@ private struct SetupThresholdSlider: View {
     let label: String
     let value: Int
     let onChange: (Int) -> Void
+    @AppStorage(AppLanguage.storageKey) private var appLanguageRaw = AppLanguage.system.rawValue
+
+    private var appLanguage: AppLanguage {
+        AppLanguage.from(appLanguageRaw)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
@@ -348,7 +407,7 @@ private struct SetupThresholdSlider: View {
                 Text(label)
                     .font(.callout)
                 Spacer()
-                Text(value > 0 ? "\(value)%" : "Off")
+                Text(value > 0 ? "\(value)%" : localizedString("value.off", fallback: "Off", language: appLanguage))
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }

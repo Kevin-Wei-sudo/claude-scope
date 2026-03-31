@@ -1,4 +1,4 @@
-# Contributing to Claude Usage Bar
+# Contributing to ClaudeScope
 
 Thanks for your interest in contributing! This guide will help you get set up and make sure your changes land smoothly.
 
@@ -11,8 +11,8 @@ Thanks for your interest in contributing! This guide will help you get set up an
 ## Getting started
 
 ```sh
-git clone https://github.com/Blimp-Labs/claude-usage-bar.git
-cd claude-usage-bar
+git clone https://github.com/yourname/claude-scope.git
+cd claude-scope
 make app
 ```
 
@@ -21,8 +21,8 @@ This builds the release binary via Swift Package Manager, bundles it as a `.app`
 ## Project structure
 
 ```
-Sources/ClaudeUsageBar/
-├── ClaudeUsageBarApp.swift      # App entry point, menu bar setup
+Sources/ClaudeScope/
+├── ClaudeScopeApp.swift         # App entry point, menu bar setup
 ├── UsageService.swift           # OAuth, polling, API calls
 ├── UsageModel.swift             # API response types
 ├── UsageHistoryModel.swift      # History data types, time ranges
@@ -67,8 +67,8 @@ Local source builds intentionally leave `SUFeedURL` unset, so Sparkle stays disa
 To export the current private key from your local Keychain:
 
 ```sh
-.build/artifacts/sparkle/Sparkle/bin/generate_keys --account claude-usage-bar -x /tmp/claude-usage-bar.sparkle.key
-gh secret set SPARKLE_PRIVATE_KEY < /tmp/claude-usage-bar.sparkle.key
+.build/artifacts/sparkle/Sparkle/bin/generate_keys --account claude-scope -x /tmp/claude-scope.sparkle.key
+gh secret set SPARKLE_PRIVATE_KEY < /tmp/claude-scope.sparkle.key
 ```
 
 ## Testing with the mock server

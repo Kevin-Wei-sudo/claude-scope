@@ -139,9 +139,15 @@ class NotificationService: ObservableObject {
             return
         }
 
+        let localizedWindow = localizedNotificationWindow(window)
         let content = UNMutableNotificationContent()
-        content.title = "Claude Usage"
-        content.body = "\(window) usage has reached \(pct)%"
+        content.title = localizedString("notification.title", fallback: "ClaudeScope")
+        content.body = localizedFormat(
+            "notification.body",
+            fallback: "%@ usage has reached %d%%",
+            localizedWindow,
+            pct
+        )
         content.sound = .default
 
         let request = UNNotificationRequest(
@@ -166,5 +172,18 @@ class NotificationService: ObservableObject {
     private static func load(_ key: String) -> Int {
         let value = UserDefaults.standard.integer(forKey: key)
         return max(0, min(100, value))
+    }
+
+    private func localizedNotificationWindow(_ window: String) -> String {
+        switch window {
+        case "5-hour":
+            return localizedString("window.5hour", fallback: "5-hour window")
+        case "7-day":
+            return localizedString("window.7day", fallback: "7-day window")
+        case "Extra usage":
+            return localizedString("window.extra", fallback: "Extra usage")
+        default:
+            return window
+        }
     }
 }
