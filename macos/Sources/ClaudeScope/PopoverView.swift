@@ -4,6 +4,7 @@ struct PopoverView: View {
     @ObservedObject var service: UsageService
     @ObservedObject var historyService: UsageHistoryService
     @ObservedObject var notificationService: NotificationService
+    @ObservedObject var intelligenceService: UsageIntelligenceService
     @ObservedObject var appUpdater: AppUpdater
     @AppStorage("setupComplete") private var setupComplete = false
     @AppStorage(AppLanguage.storageKey) private var appLanguageRaw = AppLanguage.system.rawValue
@@ -69,6 +70,11 @@ struct PopoverView: View {
 
     @ViewBuilder
     private var usageView: some View {
+        if let snapshot = intelligenceService.snapshot {
+            IntelligenceSection(snapshot: snapshot, language: appLanguage)
+            Divider()
+        }
+
         UsageBucketRow(
             label: localizedString("usage.five_hour_window", fallback: "5-Hour Window", language: appLanguage),
             bucket: service.usage?.fiveHour
@@ -172,6 +178,132 @@ struct PopoverView: View {
         }
         .buttonStyle(.borderless)
         .font(.caption)
+    }
+}
+
+private struct IntelligenceSection: View {
+    let snapshot: UsageIntelligenceSnapshot
+    let language: AppLanguage
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(localizedString("intelligence.section_title", fallback: "Usage Intelligence", language: language))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            IntelligenceSummaryCard(snapshot: snapshot, language: language)
+
+            if !snapshot.insights.isEmpty {
+                VStack(alignment: .leading, spacing: 6) {
+                    ForEach(snapshot.insights) { insight in
+                        UsageInsightRow(insight: insight, language: language)
+                    }
+                }
+            }
+        }
+    }
+}
+
+private struct IntelligenceSummaryCard: View {
+    let snapshot: UsageIntelligenceSnapshot
+    let language: AppLanguage
+
+    private var tint: Color {
+        switch snapshot.summary.kind {
+        case .risk:
+            return .orange
+        case .action:
+            return .blue
+        case .opportunity:
+            return .green
+        case .neutral:
+            return .secondary
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(localizedString(
+                snapshot.summary.titleKey,
+                fallback: snapshot.summary.titleFallback,
+                language: language
+            ))
+            .font(.subheadline.weight(.semibold))
+            .lineLimit(nil)
+            .fixedSize(horizontal: false, vertical: true)
+
+            Text(summaryBody)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(nil)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Text(
+                localizedFormat(
+                    "intelligence.current_windows",
+                    fallback: "Current: 5-hour %d%% · 7-day %d%%",
+                    language: language,
+                    Int(round(snapshot.fiveHourCurrentPct)),
+                    Int(round(snapshot.sevenDayCurrentPct))
+                )
+            )
+            .font(.caption2)
+            .foregroundStyle(tint)
+            .lineLimit(nil)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(tint.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+    }
+
+    private var summaryBody: String {
+        let format = localizedString(
+            snapshot.summary.bodyKey,
+            fallback: snapshot.summary.bodyFallback,
+            language: language
+        )
+        return String(format: format, locale: language.locale, arguments: snapshot.summary.bodyArguments)
+    }
+}
+
+private struct UsageInsightRow: View {
+    let insight: UsageInsightItem
+    let language: AppLanguage
+
+    private var tint: Color {
+        switch insight.kind {
+        case .risk:
+            return .orange
+        case .action:
+            return .blue
+        case .opportunity:
+            return .green
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(localizedString(insight.titleKey, fallback: insight.titleFallback, language: language))
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(tint)
+                .lineLimit(nil)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Text(bodyText)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .lineLimit(nil)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.quaternary.opacity(0.45), in: RoundedRectangle(cornerRadius: 8))
+    }
+
+    private var bodyText: String {
+        let format = localizedString(insight.bodyKey, fallback: insight.bodyFallback, language: language)
+        return String(format: format, locale: language.locale, arguments: insight.bodyArguments)
     }
 }
 

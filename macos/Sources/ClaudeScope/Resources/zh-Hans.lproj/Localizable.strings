@@ -34,6 +34,10 @@
 "settings.general" = "常规";
 "settings.polling_interval" = "轮询间隔";
 "settings.notifications" = "通知";
+"settings.reset_reminders" = "重置提醒";
+"settings.usage_intelligence" = "用量智能";
+"settings.usage_intelligence_enabled" = "启用用量智能";
+"settings.predictions" = "预测";
 "settings.account" = "账户";
 "settings.sign_out" = "退出登录";
 "settings.language" = "语言";
@@ -44,9 +48,34 @@
 "chart.no_history" = "暂无历史数据。";
 "notification.title" = "ClaudeScope";
 "notification.body" = "%@ 用量已达到 %d%%";
+"notification.reset_soon.title" = "即将重置";
+"notification.reset_soon.body" = "%@ 约 30 分钟后重置。";
+"notification.reset_now.title" = "额度已重置";
+"notification.reset_now.body" = "%@ 已完成重置。";
 "window.5hour" = "5 小时窗口";
 "window.7day" = "7 天窗口";
 "window.extra" = "额外用量";
+
+"intelligence.section_title" = "用量智能";
+"intelligence.insights_title" = "洞察";
+"intelligence.summary.risk.title" = "5 小时窗口升温";
+"intelligence.summary.risk.body" = "当前 5 小时 %d%%，7 天 %d%%。按这个速度，约 %d 小时后进入高风险区。";
+"intelligence.summary.action.title" = "当前状态稳定";
+"intelligence.summary.action.body" = "当前 5 小时 %d%%，7 天 %d%%。整体稳定，这个窗口稍微控一下节奏。";
+"intelligence.summary.opportunity.title" = "窗口比较宽松";
+"intelligence.summary.opportunity.body" = "当前 5 小时 %d%%，7 天 %d%%。两个窗口都还有空间。";
+"intelligence.current_windows" = "当前：5 小时 %d%% · 7 天 %d%%";
+"intelligence.safe_budget" = "5 小时窗口仍可安全增加：%d%%";
+"intelligence.insight.save_for_reset.title" = "重任务等重置后";
+"intelligence.insight.save_for_reset.body" = "你已接近 5 小时高风险区，而且离下次重置不远。";
+"intelligence.insight.anomaly.title" = "当前用量升温";
+"intelligence.insight.anomaly.body" = "最近使用速度约为 7 天基线的 %.1f 倍。";
+"intelligence.insight.peak_window.title" = "正处在高消耗时段";
+"intelligence.insight.peak_window.body" = "你通常在 %d:00 左右消耗更快，建议先合并问题。";
+"intelligence.insight.good_window.title" = "适合做大一点的任务";
+"intelligence.insight.good_window.body" = "两个窗口都还有空间，适合总结、复盘或长任务。";
+"intelligence.insight.safe_budget.title" = "这个窗口先收一点";
+"intelligence.insight.safe_budget.body" = "为保持舒适区，建议这个 5 小时窗口再控制在 %d%% 以内。";
 
 "error.updater_not_configured" = "当前版本未配置更新功能";
 "error.oauth_state_mismatch" = "OAuth 状态不匹配，请重试";

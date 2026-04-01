@@ -34,6 +34,10 @@
 "settings.general" = "General";
 "settings.polling_interval" = "Polling Interval";
 "settings.notifications" = "Notifications";
+"settings.reset_reminders" = "Reset reminders";
+"settings.usage_intelligence" = "Usage Intelligence";
+"settings.usage_intelligence_enabled" = "Usage intelligence";
+"settings.predictions" = "Predictions";
 "settings.account" = "Account";
 "settings.sign_out" = "Sign Out";
 "settings.language" = "Language";
@@ -44,9 +48,34 @@
 "chart.no_history" = "No history data yet.";
 "notification.title" = "ClaudeScope";
 "notification.body" = "%@ usage has reached %d%%";
+"notification.reset_soon.title" = "Reset soon";
+"notification.reset_soon.body" = "%@ resets in about 30 minutes.";
+"notification.reset_now.title" = "Budget reset";
+"notification.reset_now.body" = "%@ has reset.";
 "window.5hour" = "5-hour window";
 "window.7day" = "7-day window";
 "window.extra" = "Extra usage";
+
+"intelligence.section_title" = "Usage Intelligence";
+"intelligence.insights_title" = "Insights";
+"intelligence.summary.risk.title" = "5-hour window is heating up";
+"intelligence.summary.risk.body" = "5-hour is at %d%% and 7-day is at %d%%. At your current pace, you may enter the high-risk zone in about %d hour(s).";
+"intelligence.summary.action.title" = "Usage is stable for now";
+"intelligence.summary.action.body" = "5-hour is at %d%% and 7-day is at %d%%. Things still look stable, but this window is worth pacing.";
+"intelligence.summary.opportunity.title" = "Windows look healthy";
+"intelligence.summary.opportunity.body" = "5-hour is at %d%% and 7-day is at %d%%. Both windows still have comfortable headroom.";
+"intelligence.current_windows" = "Current: 5-hour %d%% · 7-day %d%%";
+"intelligence.safe_budget" = "Safe additional 5-hour headroom: %d%%";
+"intelligence.insight.save_for_reset.title" = "Save heavy work for reset";
+"intelligence.insight.save_for_reset.body" = "You are close to the 5-hour risk zone and the next reset is fairly soon.";
+"intelligence.insight.anomaly.title" = "Usage is running hot";
+"intelligence.insight.anomaly.body" = "Your recent usage pace is about %.1fx above your 7-day baseline.";
+"intelligence.insight.peak_window.title" = "This is one of your peak hours";
+"intelligence.insight.peak_window.body" = "You usually burn usage faster around %d:00. Consider batching prompts right now.";
+"intelligence.insight.good_window.title" = "Good time for bigger tasks";
+"intelligence.insight.good_window.body" = "You still have room in both windows, so this is a strong time for summaries, reviews, or larger runs.";
+"intelligence.insight.safe_budget.title" = "Keep this window lean";
+"intelligence.insight.safe_budget.body" = "To stay comfortable before reset, try to keep another %d%% or less in this 5-hour window.";
 
 "error.updater_not_configured" = "Updater is not configured for this build";
 "error.oauth_state_mismatch" = "OAuth state mismatch — try again";

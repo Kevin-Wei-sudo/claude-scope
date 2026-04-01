@@ -13,6 +13,7 @@ class UsageService: ObservableObject {
 
     var historyService: UsageHistoryService?
     var notificationService: NotificationService?
+    var intelligenceService: UsageIntelligenceService?
 
     private var timer: Timer?
     private let session: URLSession
@@ -259,6 +260,7 @@ class UsageService: ObservableObject {
         refreshTask?.cancel()
         refreshTask = nil
         lastError = nil
+        intelligenceService?.reset()
     }
 
     // MARK: - PKCE Helpers
@@ -318,6 +320,11 @@ class UsageService: ObservableObject {
             lastUpdated = Date()
             historyService?.recordDataPoint(pct5h: pct5h, pct7d: pct7d)
             notificationService?.checkAndNotify(pct5h: pct5h, pct7d: pct7d, pctExtra: pctExtra)
+            notificationService?.checkResetReminders(reset5h: reset5h, reset7d: reset7d)
+            intelligenceService?.refresh(
+                usage: reconciled,
+                history: historyService?.history ?? UsageHistory()
+            )
             if currentInterval != baseInterval {
                 currentInterval = baseInterval
                 scheduleTimer()

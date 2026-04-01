@@ -60,16 +60,20 @@ class NotificationService: ObservableObject {
     @Published private(set) var threshold5h: Int
     @Published private(set) var threshold7d: Int
     @Published private(set) var thresholdExtra: Int
+    @Published private(set) var resetRemindersEnabled: Bool
 
     private var previousPct5h: Double?
     private var previousPct7d: Double?
     private var previousPctExtra: Double?
+    private var lastSoonReminderWindow: String?
+    private var lastCompletionReminderWindow: String?
     private let delegate = NotificationDelegate()
 
     init() {
         threshold5h = Self.load("notificationThreshold5h")
         threshold7d = Self.load("notificationThreshold7d")
         thresholdExtra = Self.load("notificationThresholdExtra")
+        resetRemindersEnabled = UserDefaults.standard.object(forKey: "notificationResetRemindersEnabled") as? Bool ?? true
         if Bundle.main.bundleIdentifier != nil {
             UNUserNotificationCenter.current().delegate = delegate
         }
@@ -94,6 +98,12 @@ class NotificationService: ObservableObject {
         UserDefaults.standard.set(thresholdExtra, forKey: "notificationThresholdExtra")
         previousPctExtra = nil
         if thresholdExtra > 0 { requestPermission() }
+    }
+
+    func setResetRemindersEnabled(_ enabled: Bool) {
+        resetRemindersEnabled = enabled
+        UserDefaults.standard.set(enabled, forKey: "notificationResetRemindersEnabled")
+        if enabled { requestPermission() }
     }
 
     func requestPermission() {
@@ -133,6 +143,13 @@ class NotificationService: ObservableObject {
         }
     }
 
+    func checkResetReminders(reset5h: Date?, reset7d: Date?, now: Date = Date()) {
+        guard resetRemindersEnabled else { return }
+
+        checkResetReminder(window: "5-hour", resetDate: reset5h, now: now)
+        checkResetReminder(window: "7-day", resetDate: reset7d, now: now)
+    }
+
     private func sendNotification(window: String, pct: Int) {
         guard Bundle.main.bundleIdentifier != nil else {
             print("[Notification] \(window) usage has reached \(pct)% (no bundle – skipped)")
@@ -163,6 +180,60 @@ class NotificationService: ObservableObject {
                 print("[Notification] Delivered: \(window) at \(pct)%")
             }
         }
+    }
+
+    private func checkResetReminder(window: String, resetDate: Date?, now: Date) {
+        guard let resetDate else { return }
+
+        let secondsUntilReset = resetDate.timeIntervalSince(now)
+        if secondsUntilReset <= 0 {
+            if lastCompletionReminderWindow != window {
+                sendSimpleNotification(
+                    identifier: "reset-now-\(window)",
+                    titleKey: "notification.reset_now.title",
+                    titleFallback: "Budget reset",
+                    bodyKey: "notification.reset_now.body",
+                    bodyFallback: "%@ has reset.",
+                    bodyArguments: [localizedNotificationWindow(window)]
+                )
+                lastCompletionReminderWindow = window
+                lastSoonReminderWindow = nil
+            }
+            return
+        }
+
+        if secondsUntilReset <= 30 * 60 && lastSoonReminderWindow != window {
+            sendSimpleNotification(
+                identifier: "reset-soon-\(window)",
+                titleKey: "notification.reset_soon.title",
+                titleFallback: "Reset soon",
+                bodyKey: "notification.reset_soon.body",
+                bodyFallback: "%@ resets in about 30 minutes.",
+                bodyArguments: [localizedNotificationWindow(window)]
+            )
+            lastSoonReminderWindow = window
+            lastCompletionReminderWindow = nil
+        }
+    }
+
+    private func sendSimpleNotification(
+        identifier: String,
+        titleKey: String,
+        titleFallback: String,
+        bodyKey: String,
+        bodyFallback: String,
+        bodyArguments: [CVarArg]
+    ) {
+        guard Bundle.main.bundleIdentifier != nil else { return }
+
+        let content = UNMutableNotificationContent()
+        content.title = localizedString(titleKey, fallback: titleFallback)
+        let format = localizedString(bodyKey, fallback: bodyFallback)
+        content.body = String(format: format, locale: AppLanguage.stored.locale, arguments: bodyArguments)
+        content.sound = .default
+
+        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: nil)
+        UNUserNotificationCenter.current().add(request)
     }
 
     private func clamp(_ value: Int) -> Int {

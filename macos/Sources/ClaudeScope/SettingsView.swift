@@ -4,6 +4,7 @@ import ServiceManagement
 struct SettingsWindowContent: View {
     @ObservedObject var service: UsageService
     @ObservedObject var notificationService: NotificationService
+    @ObservedObject var intelligenceService: UsageIntelligenceService
     @AppStorage(AppLanguage.storageKey) private var appLanguageRaw = AppLanguage.system.rawValue
 
     private var appLanguage: AppLanguage {
@@ -33,6 +34,14 @@ struct SettingsWindowContent: View {
             }
 
             Section(localizedString("settings.notifications", fallback: "Notifications", language: appLanguage)) {
+                Toggle(
+                    localizedString("settings.reset_reminders", fallback: "Reset reminders", language: appLanguage),
+                    isOn: Binding(
+                        get: { notificationService.resetRemindersEnabled },
+                        set: { notificationService.setResetRemindersEnabled($0) }
+                    )
+                )
+
                 ThresholdSlider(
                     label: localizedString("window.5hour", fallback: "5-hour window", language: appLanguage),
                     value: notificationService.threshold5h,
@@ -47,6 +56,17 @@ struct SettingsWindowContent: View {
                     label: localizedString("window.extra", fallback: "Extra usage", language: appLanguage),
                     value: notificationService.thresholdExtra,
                     onChange: { notificationService.setThresholdExtra($0) }
+                )
+            }
+
+            Section(localizedString("settings.usage_intelligence", fallback: "Usage Intelligence", language: appLanguage)) {
+                Toggle(
+                    localizedString("settings.predictions", fallback: "Predictions", language: appLanguage),
+                    isOn: $intelligenceService.predictionEnabled
+                )
+                Toggle(
+                    localizedString("settings.usage_intelligence_enabled", fallback: "Usage intelligence", language: appLanguage),
+                    isOn: $intelligenceService.intelligenceEnabled
                 )
             }
 
