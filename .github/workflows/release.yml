@@ -13,13 +13,17 @@ jobs:
     runs-on: macos-14
     permissions:
       contents: write
+    outputs:
+      pages_enabled: ${{ steps.configure_pages.outcome == 'success' && 'true' || 'false' }}
     env:
       REPOSITORY_NAME: ${{ github.event.repository.name }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Configure GitHub Pages
+        id: configure_pages
         uses: actions/configure-pages@v5
+        continue-on-error: true
 
       - name: Build release app bundle
         run: |
@@ -86,6 +90,7 @@ jobs:
           body_path: dist/release-notes.md
 
       - name: Generate Sparkle appcast
+        if: steps.configure_pages.outcome == 'success'
         env:
           SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
         run: |
@@ -105,12 +110,14 @@ jobs:
               -o dist/site/appcast.xml
 
       - name: Upload appcast for GitHub Pages
+        if: steps.configure_pages.outcome == 'success'
         uses: actions/upload-pages-artifact@v4
         with:
           path: dist/site
 
   deploy_appcast:
     needs: release
+    if: needs.release.outputs.pages_enabled == 'true'
     runs-on: ubuntu-latest
     permissions:
       pages: write
