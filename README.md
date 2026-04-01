@@ -27,6 +27,7 @@ A tiny macOS menu bar app that shows your Claude API usage at a glance. Click it
 - Menu bar icon with a mini dual-bar showing 5-hour and 7-day utilization
 - Detailed popover with per-window usage, per-model breakdown, and reset timers
 - Usage Intelligence cards with state-aware highlights, concise suggestions, and risk/opportunity cues
+- Refreshed macOS app icon with a native rounded-square look and a clearer ClaudeScope visual identity
 - Extra usage tracking with USD currency display
 - Usage history chart — see how your usage evolves over time (1h / 6h / 1d / 7d / 30d)
 - Hover over the chart to see exact values at any point
@@ -203,6 +204,7 @@ macos/                           # macOS menu bar app (Swift/SwiftUI)
 │   └── claude-logo.svg             # Source SVG for menu bar logo
 ├── scripts/
 │   ├── build.sh                     # Build + bundle + codesign
+│   ├── generate-app-icon.swift      # Regenerate AppIcon.appiconset + AppIcon.icns
 │   └── generate-logo-png.swift      # Regenerate logo PNG from SVG
 └── Package.swift
 

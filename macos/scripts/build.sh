@@ -74,6 +74,7 @@ build_app_bundle() {
 
     cp "$PROJECT_DIR/Resources/Info.plist" "$APP_BUNDLE/Contents/Info.plist"
     cp "$binary" "$APP_BUNDLE/Contents/MacOS/$APP_NAME"
+    cp "$APP_ICON_SOURCE" "$APP_BUNDLE/Contents/Resources/AppIcon.icns"
 
     local app_version="${APP_VERSION:-$($PLIST_BUDDY -c 'Print :CFBundleShortVersionString' "$PROJECT_DIR/Resources/Info.plist")}"
     local app_build="${APP_BUILD:-$(version_to_build_number "$app_version")}"
