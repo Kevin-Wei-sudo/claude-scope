@@ -82,7 +82,8 @@ func buildIntelligenceSummary(
             titleFallback: "5-hour window is heating up",
             bodyKey: "intelligence.summary.risk.body",
             bodyFallback: "5-hour is at %d%% and 7-day is at %d%%. At your current pace, you may enter the high-risk zone in about %d hour(s).",
-            bodyArguments: [Int(round(fiveHourCurrentPct)), Int(round(sevenDayCurrentPct)), hours]
+            bodyArguments: [Int(round(fiveHourCurrentPct)), Int(round(sevenDayCurrentPct)), hours],
+            emphasizedFragments: ["high-risk zone", "高风险区", "\(hours)"]
         )
     }
 
@@ -92,8 +93,9 @@ func buildIntelligenceSummary(
             titleKey: "intelligence.summary.opportunity.title",
             titleFallback: "Windows look healthy",
             bodyKey: "intelligence.summary.opportunity.body",
-            bodyFallback: "5-hour is at %d%% and 7-day is at %d%%. Both windows still have comfortable headroom.",
-            bodyArguments: [Int(round(fiveHourCurrentPct)), Int(round(sevenDayCurrentPct))]
+            bodyFallback: "5-hour is at %d%% and 7-day is at %d%%. Both windows are still running at a low level.",
+            bodyArguments: [Int(round(fiveHourCurrentPct)), Int(round(sevenDayCurrentPct))],
+            emphasizedFragments: ["low level", "低位", "低占用"]
         )
     }
 
@@ -103,7 +105,8 @@ func buildIntelligenceSummary(
         titleFallback: "Usage is stable for now",
         bodyKey: "intelligence.summary.action.body",
         bodyFallback: "5-hour is at %d%% and 7-day is at %d%%. Things still look stable, but this window is worth pacing.",
-        bodyArguments: [Int(round(fiveHourCurrentPct)), Int(round(sevenDayCurrentPct))]
+        bodyArguments: [Int(round(fiveHourCurrentPct)), Int(round(sevenDayCurrentPct))],
+        emphasizedFragments: ["stable", "稳定", "pacing", "控制一下节奏"]
     )
 }
 
@@ -157,7 +160,8 @@ func buildInsightItems(
                 titleFallback: "Save heavy work for reset",
                 bodyKey: "intelligence.insight.save_for_reset.body",
                 bodyFallback: "You are close to the 5-hour risk zone and the next reset is fairly soon.",
-                bodyArguments: []
+                bodyArguments: [],
+                emphasizedFragments: ["reset", "重置", "5-hour risk zone", "5 小时高风险区"]
             )
         )
     }
@@ -170,7 +174,8 @@ func buildInsightItems(
                 titleFallback: "Usage is running hot",
                 bodyKey: "intelligence.insight.anomaly.body",
                 bodyFallback: "Your recent usage pace is about %.1fx above your 7-day baseline.",
-                bodyArguments: [multiplier]
+                bodyArguments: [multiplier],
+                emphasizedFragments: ["above your 7-day baseline", "7 天基线", String(format: "%.1f", multiplier)]
             )
         )
     }
@@ -185,7 +190,8 @@ func buildInsightItems(
                     titleFallback: "This is one of your peak hours",
                     bodyKey: "intelligence.insight.peak_window.body",
                     bodyFallback: "You usually burn usage faster around %@:00. Consider batching prompts right now.",
-                    bodyArguments: [peakHour]
+                    bodyArguments: [peakHour],
+                    emphasizedFragments: ["batching prompts", "合并问题", "\(peakHour):00"]
                 )
             )
         }
@@ -199,7 +205,8 @@ func buildInsightItems(
                 titleFallback: "Good time for bigger tasks",
                 bodyKey: "intelligence.insight.good_window.body",
                 bodyFallback: "You still have room in both windows, so this is a strong time for summaries, reviews, or larger runs.",
-                bodyArguments: []
+                bodyArguments: [],
+                emphasizedFragments: ["summaries, reviews, or larger runs", "总结、复盘或长任务", "还有空间"]
             )
         )
     }
@@ -212,7 +219,8 @@ func buildInsightItems(
                 titleFallback: "Keep this window lean",
                 bodyKey: "intelligence.insight.safe_budget.body",
                 bodyFallback: "To stay comfortable before reset, try to keep another %d%% or less in this 5-hour window.",
-                bodyArguments: [Int(round(safePct))]
+                bodyArguments: [Int(round(safePct))],
+                emphasizedFragments: ["before reset", "重置前", "5-hour window", "5 小时窗口"]
             )
         )
     }

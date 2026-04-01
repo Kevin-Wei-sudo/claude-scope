@@ -63,7 +63,7 @@
 "intelligence.summary.action.title" = "当前状态稳定";
 "intelligence.summary.action.body" = "当前 5 小时 %d%%，7 天 %d%%。整体稳定，这个窗口稍微控一下节奏。";
 "intelligence.summary.opportunity.title" = "窗口比较宽松";
-"intelligence.summary.opportunity.body" = "当前 5 小时 %d%%，7 天 %d%%。两个窗口都还有空间。";
+"intelligence.summary.opportunity.body" = "当前 5 小时 %d%%，7 天 %d%%。两个窗口都处于低位。";
 "intelligence.current_windows" = "当前：5 小时 %d%% · 7 天 %d%%";
 "intelligence.safe_budget" = "5 小时窗口仍可安全增加：%d%%";
 "intelligence.insight.save_for_reset.title" = "重任务等重置后";

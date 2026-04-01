@@ -222,39 +222,39 @@ private struct IntelligenceSummaryCard: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(localizedString(
-                snapshot.summary.titleKey,
-                fallback: snapshot.summary.titleFallback,
-                language: language
-            ))
-            .font(.subheadline.weight(.semibold))
-            .lineLimit(nil)
-            .fixedSize(horizontal: false, vertical: true)
+        HStack(alignment: .top, spacing: 10) {
+            RoundedRectangle(cornerRadius: 2)
+                .fill(tint)
+                .frame(width: 4)
 
-            Text(summaryBody)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 6) {
+                Text(localizedString(
+                    snapshot.summary.titleKey,
+                    fallback: snapshot.summary.titleFallback,
+                    language: language
+                ))
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(tint)
                 .lineLimit(nil)
                 .fixedSize(horizontal: false, vertical: true)
 
-            Text(
-                localizedFormat(
-                    "intelligence.current_windows",
-                    fallback: "Current: 5-hour %d%% · 7-day %d%%",
-                    language: language,
-                    Int(round(snapshot.fiveHourCurrentPct)),
-                    Int(round(snapshot.sevenDayCurrentPct))
+                Text.highlightedInsightBody(
+                    summaryBody,
+                    emphasizedFragments: snapshot.summary.emphasizedFragments,
+                    accent: tint,
+                    baseFont: .caption
                 )
-            )
-            .font(.caption2)
-            .foregroundStyle(tint)
-            .lineLimit(nil)
-            .fixedSize(horizontal: false, vertical: true)
+                    .lineLimit(nil)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
-        .padding(10)
+        .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(tint.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(tint.opacity(0.18), lineWidth: 1)
+        )
     }
 
     private var summaryBody: String {
@@ -283,27 +283,102 @@ private struct UsageInsightRow: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            Text(localizedString(insight.titleKey, fallback: insight.titleFallback, language: language))
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(tint)
-                .lineLimit(nil)
-                .fixedSize(horizontal: false, vertical: true)
+        HStack(alignment: .top, spacing: 8) {
+            RoundedRectangle(cornerRadius: 2)
+                .fill(tint)
+                .frame(width: 3)
 
-            Text(bodyText)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-                .lineLimit(nil)
-                .fixedSize(horizontal: false, vertical: true)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(localizedString(insight.titleKey, fallback: insight.titleFallback, language: language))
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(tint)
+                    .lineLimit(nil)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text.highlightedInsightBody(
+                    bodyText,
+                    emphasizedFragments: insight.emphasizedFragments,
+                    accent: tint,
+                    baseFont: .caption2
+                )
+                    .lineLimit(nil)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
-        .padding(8)
+        .padding(10)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.quaternary.opacity(0.45), in: RoundedRectangle(cornerRadius: 8))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(tint.opacity(0.16), lineWidth: 1)
+        )
     }
 
     private var bodyText: String {
         let format = localizedString(insight.bodyKey, fallback: insight.bodyFallback, language: language)
         return String(format: format, locale: language.locale, arguments: insight.bodyArguments)
+    }
+}
+
+private extension Text {
+    static func highlightedInsightBody(
+        _ text: String,
+        emphasizedFragments: [String],
+        accent: Color,
+        baseFont: Font
+    ) -> Text {
+        let fragments = emphasizedFragments
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty && text.localizedCaseInsensitiveContains($0) }
+
+        guard !fragments.isEmpty else {
+            return Text(text).font(baseFont).foregroundStyle(.secondary)
+        }
+
+        let nsText = text as NSString
+        let escaped = fragments.map { fragment in
+            let escapedFragment = NSRegularExpression.escapedPattern(for: fragment)
+            if fragment.range(of: #"^\d+(?:\.\d+)?%?$"#, options: .regularExpression) != nil {
+                return #"(?<!\d)"# + escapedFragment + #"(?!\d)"#
+            }
+            return escapedFragment
+        }
+        guard let regex = try? NSRegularExpression(
+            pattern: escaped.joined(separator: "|"),
+            options: [.caseInsensitive]
+        ) else {
+            return Text(text).font(baseFont).foregroundStyle(.secondary)
+        }
+
+        let matches = regex.matches(in: text, range: NSRange(location: 0, length: nsText.length))
+            .sorted { $0.range.location < $1.range.location }
+        guard !matches.isEmpty else {
+            return Text(text).font(baseFont).foregroundStyle(.secondary)
+        }
+
+        var result = Text("")
+        var cursor = 0
+
+        for match in matches {
+            let range = match.range
+            if range.location < cursor { continue }
+
+            if range.location > cursor {
+                let prefix = nsText.substring(with: NSRange(location: cursor, length: range.location - cursor))
+                result = result + Text(prefix).font(baseFont).foregroundStyle(.secondary)
+            }
+
+            let value = nsText.substring(with: range)
+            result = result + Text(value).font(baseFont.weight(.semibold)).foregroundStyle(accent)
+            cursor = range.location + range.length
+        }
+
+        if cursor < nsText.length {
+            let suffix = nsText.substring(from: cursor)
+            result = result + Text(suffix).font(baseFont).foregroundStyle(.secondary)
+        }
+
+        return result
     }
 }
 

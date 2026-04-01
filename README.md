@@ -26,6 +26,7 @@ A tiny macOS menu bar app that shows your Claude API usage at a glance. Click it
 
 - Menu bar icon with a mini dual-bar showing 5-hour and 7-day utilization
 - Detailed popover with per-window usage, per-model breakdown, and reset timers
+- Usage Intelligence cards with state-aware highlights, concise suggestions, and risk/opportunity cues
 - Extra usage tracking with USD currency display
 - Usage history chart — see how your usage evolves over time (1h / 6h / 1d / 7d / 30d)
 - Hover over the chart to see exact values at any point
@@ -103,6 +104,7 @@ The icon updates automatically after sign-in (default: every 30 minutes). Releas
 
 Click the icon anytime to see:
 - 5-hour and 7-day usage with progress bars and reset timers
+- Usage Intelligence summaries and suggestions that adapt to your current usage state
 - Per-model breakdown (Opus / Sonnet) when available
 - Extra usage credits and limits
 - Usage history chart with adjustable time range and hover details

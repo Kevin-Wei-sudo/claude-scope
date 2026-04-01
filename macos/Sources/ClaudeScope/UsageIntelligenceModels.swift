@@ -32,6 +32,7 @@ struct IntelligenceSummary {
     let bodyKey: String
     let bodyFallback: String
     let bodyArguments: [CVarArg]
+    let emphasizedFragments: [String]
 }
 
 struct UsageInsightItem: Identifiable {
@@ -42,6 +43,7 @@ struct UsageInsightItem: Identifiable {
     let bodyKey: String
     let bodyFallback: String
     let bodyArguments: [CVarArg]
+    let emphasizedFragments: [String]
 }
 
 struct UsageIntelligenceSnapshot {

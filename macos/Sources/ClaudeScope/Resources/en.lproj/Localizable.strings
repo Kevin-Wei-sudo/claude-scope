@@ -63,7 +63,7 @@
 "intelligence.summary.action.title" = "Usage is stable for now";
 "intelligence.summary.action.body" = "5-hour is at %d%% and 7-day is at %d%%. Things still look stable, but this window is worth pacing.";
 "intelligence.summary.opportunity.title" = "Windows look healthy";
-"intelligence.summary.opportunity.body" = "5-hour is at %d%% and 7-day is at %d%%. Both windows still have comfortable headroom.";
+"intelligence.summary.opportunity.body" = "5-hour is at %d%% and 7-day is at %d%%. Both windows are still running at a low level.";
 "intelligence.current_windows" = "Current: 5-hour %d%% · 7-day %d%%";
 "intelligence.safe_budget" = "Safe additional 5-hour headroom: %d%%";
 "intelligence.insight.save_for_reset.title" = "Save heavy work for reset";
