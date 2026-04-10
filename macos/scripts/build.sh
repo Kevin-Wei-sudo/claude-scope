@@ -13,11 +13,13 @@ CREATE_DMG_TARBALL_URL="https://github.com/create-dmg/create-dmg/archive/refs/ta
 DMG_RESOURCES_DIR="$PROJECT_DIR/Resources/dmg"
 DMG_BACKGROUND_SOURCE="$DMG_RESOURCES_DIR/background.png"
 APP_ICON_SOURCE="$PROJECT_DIR/Resources/AppIcon.icns"
+ENTITLEMENTS_PATH="$PROJECT_DIR/Resources/ClaudeScope.entitlements"
 PLIST_BUDDY="/usr/libexec/PlistBuddy"
 PLUTIL="/usr/bin/plutil"
 CREATE_ZIP=0
 CREATE_DMG=0
 SKIP_BUILD=0
+APP_STORE_BUILD=0
 
 cd "$PROJECT_DIR"
 
@@ -31,6 +33,9 @@ while [[ $# -gt 0 ]]; do
             ;;
         --skip-build)
             SKIP_BUILD=1
+            ;;
+        --app-store)
+            APP_STORE_BUILD=1
             ;;
         *)
             echo "Error: unknown option '$1'"
@@ -59,7 +64,11 @@ version_to_build_number() {
 
 build_app_bundle() {
     echo "==> Building release binary..."
-    swift build -c release
+    if [[ "$APP_STORE_BUILD" -eq 1 ]]; then
+        APP_STORE=1 swift build -c release
+    else
+        swift build -c release
+    fi
 
     local binary="$BUILD_DIR/release/$APP_NAME"
     if [[ ! -f "$binary" ]]; then
@@ -82,7 +91,12 @@ build_app_bundle() {
     "$PLIST_BUDDY" -c "Set :CFBundleShortVersionString $app_version" "$APP_BUNDLE/Contents/Info.plist"
     "$PLIST_BUDDY" -c "Set :CFBundleVersion $app_build" "$APP_BUNDLE/Contents/Info.plist"
 
-    if [[ -n "${SU_FEED_URL:-}" ]]; then
+    if [[ "$APP_STORE_BUILD" -eq 1 ]]; then
+        "$PLUTIL" -remove SUFeedURL "$APP_BUNDLE/Contents/Info.plist" 2>/dev/null || true
+        "$PLUTIL" -remove SUPublicEDKey "$APP_BUNDLE/Contents/Info.plist" 2>/dev/null || true
+        "$PLUTIL" -remove SUEnableAutomaticChecks "$APP_BUNDLE/Contents/Info.plist" 2>/dev/null || true
+        "$PLUTIL" -remove SUScheduledCheckInterval "$APP_BUNDLE/Contents/Info.plist" 2>/dev/null || true
+    elif [[ -n "${SU_FEED_URL:-}" ]]; then
         "$PLUTIL" -replace SUFeedURL -string "$SU_FEED_URL" "$APP_BUNDLE/Contents/Info.plist"
     else
         "$PLUTIL" -remove SUFeedURL "$APP_BUNDLE/Contents/Info.plist" 2>/dev/null || true
@@ -111,7 +125,7 @@ build_app_bundle() {
 
     local sparkle_framework
     sparkle_framework="$(find "$BUILD_DIR" -path '*/Sparkle.framework' -type d | head -n 1 || true)"
-    if [[ -n "$sparkle_framework" ]]; then
+    if [[ "$APP_STORE_BUILD" -eq 0 && -n "$sparkle_framework" ]]; then
         echo "==> Bundling Sparkle.framework..."
         mkdir -p "$APP_BUNDLE/Contents/Frameworks"
         ditto "$sparkle_framework" "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
@@ -125,7 +139,11 @@ build_app_bundle() {
             \( -name '*.app' -o -name '*.xpc' \) -type d | sort)
         codesign --force --sign - "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
     fi
-    codesign --force --sign - "$APP_BUNDLE"
+    if [[ "$APP_STORE_BUILD" -eq 1 ]]; then
+        codesign --force --sign - --entitlements "$ENTITLEMENTS_PATH" "$APP_BUNDLE"
+    else
+        codesign --force --sign - "$APP_BUNDLE"
+    fi
 
     echo "==> Built $APP_BUNDLE"
     codesign -v "$APP_BUNDLE"

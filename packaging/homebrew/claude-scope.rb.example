@@ -15,6 +15,6 @@ cask "claude-scope" do
 
   zap trash: [
     "~/.config/claude-scope",
-    "~/Library/Preferences/com.local.ClaudeScope.plist",
+    "~/Library/Preferences/io.sandwichlab.claudescope.plist",
   ]
 end

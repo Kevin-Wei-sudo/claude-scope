@@ -1,4 +1,22 @@
 import Foundation
+
+#if APP_STORE
+@MainActor
+final class AppUpdater: ObservableObject {
+    @Published private(set) var canCheckForUpdates = false
+    @Published private(set) var isConfigured = false
+    @Published private(set) var lastError: String?
+
+    init(bundle: Bundle = .main) {}
+
+    func checkForUpdates() {
+        lastError = localizedString(
+            "error.updater_not_configured",
+            fallback: "Updater is not configured for this build"
+        )
+    }
+}
+#else
 import Sparkle
 
 @MainActor
@@ -49,3 +67,4 @@ final class AppUpdater: ObservableObject {
         updaterController.checkForUpdates(nil)
     }
 }
+#endif

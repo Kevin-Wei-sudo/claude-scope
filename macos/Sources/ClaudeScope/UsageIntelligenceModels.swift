@@ -1,13 +1,13 @@
 import Foundation
 
-enum IntelligenceSummaryKind {
+enum IntelligenceSummaryKind: Equatable {
     case risk
     case action
     case opportunity
     case neutral
 }
 
-enum UsageInsightKind {
+enum UsageInsightKind: Equatable {
     case risk
     case action
     case opportunity

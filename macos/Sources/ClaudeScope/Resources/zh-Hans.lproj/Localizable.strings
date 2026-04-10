@@ -60,6 +60,10 @@
 "intelligence.insights_title" = "洞察";
 "intelligence.summary.risk.title" = "5 小时窗口升温";
 "intelligence.summary.risk.body" = "当前 5 小时 %d%%，7 天 %d%%。按这个速度，约 %d 小时后进入高风险区。";
+"intelligence.summary.seven_day_risk.title" = "7 天窗口吃紧";
+"intelligence.summary.seven_day_risk.body" = "当前 7 天 %d%%，5 小时 %d%%。大任务建议等周重置后再做。";
+"intelligence.summary.seven_day_action.title" = "7 天窗口需要控速";
+"intelligence.summary.seven_day_action.body" = "当前 7 天 %d%%，5 小时 %d%%。短任务可以继续，大任务先控节奏。";
 "intelligence.summary.action.title" = "当前状态稳定";
 "intelligence.summary.action.body" = "当前 5 小时 %d%%，7 天 %d%%。整体稳定，这个窗口稍微控一下节奏。";
 "intelligence.summary.opportunity.title" = "窗口比较宽松";
@@ -68,6 +72,10 @@
 "intelligence.safe_budget" = "5 小时窗口仍可安全增加：%d%%";
 "intelligence.insight.save_for_reset.title" = "重任务等重置后";
 "intelligence.insight.save_for_reset.body" = "你已接近 5 小时高风险区，而且离下次重置不远。";
+"intelligence.insight.seven_day_tight.title" = "保护 7 天额度";
+"intelligence.insight.seven_day_tight.body" = "现在主要受 7 天窗口限制，重任务建议等周重置后再做。";
+"intelligence.insight.seven_day_pacing.title" = "大任务先控节奏";
+"intelligence.insight.seven_day_pacing.body" = "5 小时窗口还有空间，但 7 天窗口已经偏高。";
 "intelligence.insight.anomaly.title" = "当前用量升温";
 "intelligence.insight.anomaly.body" = "最近使用速度约为 7 天基线的 %.1f 倍。";
 "intelligence.insight.peak_window.title" = "正处在高消耗时段";

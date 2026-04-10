@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleIdentifier</key>
-    <string>com.local.ClaudeScope</string>
+    <string>io.sandwichlab.claudescope</string>
     <key>CFBundleName</key>
     <string>ClaudeScope</string>
     <key>CFBundleDisplayName</key>
@@ -24,6 +24,8 @@
     <true/>
     <key>LSMinimumSystemVersion</key>
     <string>14.0</string>
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.utilities</string>
     <key>SUEnableAutomaticChecks</key>
     <true/>
     <key>SUScheduledCheckInterval</key>

@@ -25,13 +25,13 @@ Without it, you cannot issue a `Developer ID Application` certificate or notariz
 The app is currently using:
 
 ```text
-com.local.ClaudeScope
+io.sandwichlab.claudescope
 ```
 
-For public release, change this to a stable reverse-domain identifier that you control, for example:
+For public release, use a stable reverse-domain identifier that you control:
 
 ```text
-io.kevinwei.claudescope
+io.sandwichlab.claudescope
 ```
 
 Location:
@@ -192,7 +192,7 @@ spctl --assess --type open --verbose=4 macos/ClaudeScope.dmg
 
 ### Bundle ID
 
-Do not keep `com.local.ClaudeScope` for long-term public distribution.
+Use `io.sandwichlab.claudescope` for long-term public distribution.
 
 ### Homebrew
 

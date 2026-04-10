@@ -60,6 +60,10 @@
 "intelligence.insights_title" = "Insights";
 "intelligence.summary.risk.title" = "5-hour window is heating up";
 "intelligence.summary.risk.body" = "5-hour is at %d%% and 7-day is at %d%%. At your current pace, you may enter the high-risk zone in about %d hour(s).";
+"intelligence.summary.seven_day_risk.title" = "7-day window is getting tight";
+"intelligence.summary.seven_day_risk.body" = "7-day is at %d%% while 5-hour is at %d%%. Keep larger tasks for after the weekly reset.";
+"intelligence.summary.seven_day_action.title" = "7-day window needs pacing";
+"intelligence.summary.seven_day_action.body" = "7-day is at %d%% while 5-hour is at %d%%. Short tasks are fine, but pace bigger work.";
 "intelligence.summary.action.title" = "Usage is stable for now";
 "intelligence.summary.action.body" = "5-hour is at %d%% and 7-day is at %d%%. Things still look stable, but this window is worth pacing.";
 "intelligence.summary.opportunity.title" = "Windows look healthy";
@@ -68,6 +72,10 @@
 "intelligence.safe_budget" = "Safe additional 5-hour headroom: %d%%";
 "intelligence.insight.save_for_reset.title" = "Save heavy work for reset";
 "intelligence.insight.save_for_reset.body" = "You are close to the 5-hour risk zone and the next reset is fairly soon.";
+"intelligence.insight.seven_day_tight.title" = "Protect the 7-day budget";
+"intelligence.insight.seven_day_tight.body" = "Your weekly window is the limiting factor now. Keep heavy tasks for after the weekly reset.";
+"intelligence.insight.seven_day_pacing.title" = "Pace larger work";
+"intelligence.insight.seven_day_pacing.body" = "Your 5-hour window has room, but the 7-day window is already elevated.";
 "intelligence.insight.anomaly.title" = "Usage is running hot";
 "intelligence.insight.anomaly.body" = "Your recent usage pace is about %.1fx above your 7-day baseline.";
 "intelligence.insight.peak_window.title" = "This is one of your peak hours";

@@ -32,10 +32,8 @@ struct StoredCredentialsStore {
     let legacyLegacyTokenFileURL: URL
 
     init(
-        directoryURL: URL = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent(".config/claude-scope", isDirectory: true),
-        legacyDirectoryURL: URL = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent(".config/claude-usage-bar", isDirectory: true),
+        directoryURL: URL = AppPaths.credentialsDirectoryURL,
+        legacyDirectoryURL: URL = AppPaths.legacyCredentialsDirectoryURL,
         fileManager: FileManager = .default
     ) {
         self.fileManager = fileManager

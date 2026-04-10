@@ -1,6 +1,7 @@
 import Foundation
 
 private let intelligenceHighRiskThreshold = 80.0
+private let sevenDayElevatedThreshold = 65.0
 private let peakWindowLookback: TimeInterval = 14 * 24 * 60 * 60
 
 func projectedSlope(
@@ -74,6 +75,18 @@ func buildIntelligenceSummary(
     fiveHourCurrentPct: Double,
     sevenDayCurrentPct: Double
 ) -> IntelligenceSummary {
+    if sevenDay?.isHighRiskSoon == true || sevenDayCurrentPct >= intelligenceHighRiskThreshold {
+        return IntelligenceSummary(
+            kind: .risk,
+            titleKey: "intelligence.summary.seven_day_risk.title",
+            titleFallback: "7-day window is getting tight",
+            bodyKey: "intelligence.summary.seven_day_risk.body",
+            bodyFallback: "7-day is at %d%% while 5-hour is at %d%%. Keep larger tasks for after the weekly reset.",
+            bodyArguments: [Int(round(sevenDayCurrentPct)), Int(round(fiveHourCurrentPct))],
+            emphasizedFragments: ["7-day", "weekly reset", "7 天", "周重置", "\(Int(round(sevenDayCurrentPct)))%"]
+        )
+    }
+
     if let projection = fiveHour, projection.isHighRiskSoon {
         let hours = max(1, Int(ceil((projection.secondsUntilHighRisk ?? 0) / 3600)))
         return IntelligenceSummary(
@@ -84,6 +97,18 @@ func buildIntelligenceSummary(
             bodyFallback: "5-hour is at %d%% and 7-day is at %d%%. At your current pace, you may enter the high-risk zone in about %d hour(s).",
             bodyArguments: [Int(round(fiveHourCurrentPct)), Int(round(sevenDayCurrentPct)), hours],
             emphasizedFragments: ["high-risk zone", "高风险区", "\(hours)"]
+        )
+    }
+
+    if sevenDayCurrentPct >= sevenDayElevatedThreshold {
+        return IntelligenceSummary(
+            kind: .action,
+            titleKey: "intelligence.summary.seven_day_action.title",
+            titleFallback: "7-day window needs pacing",
+            bodyKey: "intelligence.summary.seven_day_action.body",
+            bodyFallback: "7-day is at %d%% while 5-hour is at %d%%. Short tasks are fine, but pace bigger work.",
+            bodyArguments: [Int(round(sevenDayCurrentPct)), Int(round(fiveHourCurrentPct))],
+            emphasizedFragments: ["7-day", "pace bigger work", "7 天", "控制大任务", "\(Int(round(sevenDayCurrentPct)))%"]
         )
     }
 
@@ -162,6 +187,32 @@ func buildInsightItems(
                 bodyFallback: "You are close to the 5-hour risk zone and the next reset is fairly soon.",
                 bodyArguments: [],
                 emphasizedFragments: ["reset", "重置", "5-hour risk zone", "5 小时高风险区"]
+            )
+        )
+    }
+
+    if sevenDay?.isHighRiskSoon == true || sevenDayCurrentPct >= intelligenceHighRiskThreshold {
+        items.append(
+            UsageInsightItem(
+                kind: .risk,
+                titleKey: "intelligence.insight.seven_day_tight.title",
+                titleFallback: "Protect the 7-day budget",
+                bodyKey: "intelligence.insight.seven_day_tight.body",
+                bodyFallback: "Your weekly window is the limiting factor now. Keep heavy tasks for after the weekly reset.",
+                bodyArguments: [],
+                emphasizedFragments: ["weekly window", "weekly reset", "7 天窗口", "周重置"]
+            )
+        )
+    } else if sevenDayCurrentPct >= sevenDayElevatedThreshold {
+        items.append(
+            UsageInsightItem(
+                kind: .action,
+                titleKey: "intelligence.insight.seven_day_pacing.title",
+                titleFallback: "Pace larger work",
+                bodyKey: "intelligence.insight.seven_day_pacing.body",
+                bodyFallback: "Your 5-hour window has room, but the 7-day window is already elevated.",
+                bodyArguments: [],
+                emphasizedFragments: ["5-hour", "7-day window", "5 小时", "7 天窗口"]
             )
         )
     }

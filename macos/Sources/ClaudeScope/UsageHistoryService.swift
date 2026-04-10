@@ -14,16 +14,13 @@ class UsageHistoryService: ObservableObject {
     private static let flushInterval: TimeInterval = 300 // 5 minutes
 
     private static var historyFileURL: URL {
-        let dir = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent(".config/claude-scope", isDirectory: true)
+        let dir = AppPaths.credentialsDirectoryURL
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir.appendingPathComponent("history.json")
     }
 
     private static var legacyHistoryFileURL: URL {
-        FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent(".config/claude-usage-bar", isDirectory: true)
-            .appendingPathComponent("history.json")
+        AppPaths.legacyCredentialsDirectoryURL.appendingPathComponent("history.json")
     }
 
     init() {
