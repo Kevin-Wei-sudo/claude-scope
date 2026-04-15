@@ -9,47 +9,104 @@
         h1 { color: #2D8C7F; }
         h2 { color: #444; margin-top: 32px; }
         p { margin: 12px 0; }
+        ul { margin: 8px 0 16px 0; }
+        li { margin: 4px 0; }
+        table { border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+        th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; vertical-align: top; }
+        th { background: #f6f6f6; }
         .date { color: #888; font-size: 14px; }
+        code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-size: 13px; }
     </style>
 </head>
 <body>
     <h1>ClaudeScope Privacy Policy</h1>
-    <p class="date">Last updated: April 9, 2026</p>
+    <p class="date">Last updated: April 15, 2026</p>
 
     <h2>Overview</h2>
-    <p>ClaudeScope is a utility app that helps you monitor your Claude AI usage. We are committed to protecting your privacy and being transparent about our data practices.</p>
+    <p>ClaudeScope is a utility app that helps you monitor your Claude AI usage. It runs on iOS, macOS, and Android, and this policy applies to all three. We are committed to protecting your privacy and being transparent about what the app and its bundled SDKs do with your data.</p>
 
     <h2>Data We Collect</h2>
-    <p><strong>Authentication Credentials:</strong> When you sign in, your OAuth access token and refresh token are stored locally on your device. These credentials are never transmitted to any server other than Anthropic's official API endpoints.</p>
-    <p><strong>Usage Data:</strong> Your Claude usage statistics (utilization percentages and reset times) are fetched directly from Anthropic's API and stored locally on your device for history tracking.</p>
-    <p><strong>Analytics:</strong> We use AppsFlyer and Facebook SDK for anonymous app analytics (e.g., feature usage, session data). No personal usage data from your Claude account is shared with these services.</p>
+    <p><strong>Authentication Credentials:</strong> When you sign in, your OAuth access token and refresh token are stored locally on your device (Keychain on Apple platforms, EncryptedSharedPreferences + Android Keystore on Android). These credentials are transmitted only to Anthropic's official API endpoints (<code>api.anthropic.com</code> and <code>platform.claude.com</code>).</p>
+    <p><strong>Usage Data:</strong> Your Claude usage statistics (utilization percentages, reset times, per-model breakdown) are fetched from Anthropic's API and stored locally on your device for history charting. They are not transmitted to any party other than Anthropic.</p>
+    <p><strong>Analytics Data (via bundled SDKs):</strong> The app links AppsFlyer and the Meta (Facebook) SDK to measure install attribution and in-app engagement. The data categories these SDKs receive are listed in the next section.</p>
+
+    <h2>Third-Party Services and What They Receive</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Service</th>
+                <th>Purpose</th>
+                <th>Data categories sent</th>
+                <th>Retention</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Anthropic API</strong></td>
+                <td>Fetch Claude usage metrics</td>
+                <td>Your OAuth access token (sent as Bearer auth). No device identifiers added by us.</td>
+                <td>Governed by <a href="https://www.anthropic.com/privacy">Anthropic</a></td>
+            </tr>
+            <tr>
+                <td><strong>AppsFlyer</strong></td>
+                <td>Install attribution and anonymous in-app event analytics</td>
+                <td>Google Advertising ID / IDFA, IP address (coarse geo), device model and OS version, install/session timestamps, in-app event names (e.g. <code>tab_selected</code>, <code>usage_fetched</code>) and their integer parameters</td>
+                <td>~90 days for raw logs, ~24 months for aggregated, per <a href="https://www.appsflyer.com/privacy-policy/">AppsFlyer policy</a></td>
+            </tr>
+            <tr>
+                <td><strong>Meta (Facebook SDK)</strong></td>
+                <td>Install attribution for Meta ad channels</td>
+                <td>Google Advertising ID / IDFA, IP address, device model and OS version, Meta attribution IDs, install/session timestamps, <code>app_activated</code>-style events</td>
+                <td>Governed by <a href="https://www.facebook.com/privacy/policy/">Meta</a></td>
+            </tr>
+        </tbody>
+    </table>
+    <p>Neither SDK receives your Claude account email, OAuth tokens, conversation content, or device-specific usage metrics.</p>
 
     <h2>Data We Do NOT Collect</h2>
     <ul>
         <li>We do not collect your Claude conversations or prompts</li>
-        <li>We do not collect your email address or personal information</li>
-        <li>We do not sell any data to third parties</li>
-        <li>We do not store any data on our servers — all data stays on your device</li>
+        <li>We do not collect your email address or personal profile (the email shown in Settings after sign-in is held in device memory only and never transmitted further)</li>
+        <li>We do not sell data to third parties</li>
+        <li>We do not operate any server that stores your data — our only backend-like touch points are Anthropic, AppsFlyer, and Meta, all governed by their own policies</li>
     </ul>
 
-    <h2>Third-Party Services</h2>
-    <p><strong>Anthropic API:</strong> Used to fetch your Claude usage data. Subject to <a href="https://www.anthropic.com/privacy">Anthropic's Privacy Policy</a>.</p>
-    <p><strong>AppsFlyer:</strong> Used for anonymous install attribution and app analytics. Subject to <a href="https://www.appsflyer.com/privacy-policy/">AppsFlyer's Privacy Policy</a>.</p>
-    <p><strong>Facebook SDK:</strong> Used for anonymous app analytics. Subject to <a href="https://www.facebook.com/privacy/policy/">Meta's Privacy Policy</a>.</p>
+    <h2>Permissions Requested (Android)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Permission</th>
+                <th>Why we need it</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td><code>INTERNET</code></td><td>OAuth sign-in, Anthropic API calls, SDK network traffic</td></tr>
+            <tr><td><code>ACCESS_NETWORK_STATE</code></td><td>AppsFlyer / Meta SDK connectivity detection</td></tr>
+            <tr><td><code>POST_NOTIFICATIONS</code> (Android 13+)</td><td>Fire local usage-threshold alerts — requested at runtime only when you enable alerts in Settings</td></tr>
+            <tr><td><code>com.google.android.gms.permission.AD_ID</code></td><td>Let AppsFlyer / Meta SDKs read the Google Advertising ID for install attribution</td></tr>
+        </tbody>
+    </table>
+
+    <h2>Your Choices and Opt-Outs</h2>
+    <p><strong>Sign out:</strong> Settings → Sign Out removes your OAuth tokens and on-device usage history.</p>
+    <p><strong>Uninstall:</strong> Removing the app deletes all on-device data it kept.</p>
+    <p><strong>Android advertising ID:</strong> You can reset or delete your Google Advertising ID in <em>Settings → Privacy → Ads</em>. After deletion, AppsFlyer and Meta can no longer correlate your install with future events from the same device.</p>
+    <p><strong>iOS tracking:</strong> On iOS we honour Apple's App Tracking Transparency — if you declined the tracking prompt (or the app did not request it), the IDFA sent to AppsFlyer / Meta is zeroed out.</p>
 
     <h2>Data Storage</h2>
-    <p>All user data (credentials, usage history, preferences) is stored locally on your device using the app's sandboxed storage. No user data is transmitted to or stored on any server operated by us.</p>
-
-    <h2>Data Deletion</h2>
-    <p>You can delete all stored data at any time by signing out within the app or by deleting the app from your device.</p>
+    <p>All user data (credentials, usage history, preferences) is stored in the app's sandboxed local storage on your device. We do not operate a server to store user data.</p>
 
     <h2>Children's Privacy</h2>
-    <p>ClaudeScope is not directed at children under 13. We do not knowingly collect personal information from children.</p>
+    <p>ClaudeScope is a developer productivity tool and is not directed at children under 16. We do not knowingly collect personal information from children under 16. If you believe a child has provided us with personal information, contact us and we will delete it.</p>
+
+    <h2>Regional Rights</h2>
+    <p><strong>EU / UK (GDPR):</strong> Analytics data is processed under legitimate-interest for measuring app performance. You can object by resetting or deleting your advertising ID, or by uninstalling the app.</p>
+    <p><strong>California (CCPA/CPRA):</strong> We do not sell personal information. AppsFlyer and Meta may be considered "sharing" for cross-context behavioural advertising purposes — you can opt out by the advertising ID controls above.</p>
 
     <h2>Changes to This Policy</h2>
-    <p>We may update this privacy policy from time to time. Any changes will be reflected on this page with an updated date.</p>
+    <p>We may update this privacy policy from time to time. Changes will be reflected on this page with an updated "Last updated" date. Material changes (e.g., a new SDK, a new data category) will also be called out in the next app release notes.</p>
 
     <h2>Contact</h2>
-    <p>If you have questions about this privacy policy, please contact us at: <a href="mailto:asankerman@hotmail.com">asankerman@hotmail.com</a></p>
+    <p>If you have questions about this privacy policy or want to exercise any rights above, please contact us at: <a href="mailto:asankerman@hotmail.com">asankerman@hotmail.com</a></p>
 </body>
 </html>
