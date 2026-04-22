@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDisplayName</key>
+	<string>ClaudeScope</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>fb1073338921362002</string>
+			</array>
+		</dict>
+	</array>
+	<key>CFBundleVersion</key>
+	<string>4</string>
+	<key>FacebookAppID</key>
+	<string>1073338921362002</string>
+	<key>FacebookClientToken</key>
+	<string>ab4d9bb25cccc1ee9a68e4f62c67e5dc</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.utilities</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>fbapi</string>
+		<string>fb-messenger-share-api</string>
+	</array>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>We use this identifier to measure app performance and personalize your experience.</string>
+	<key>SKAdNetworkItems</key>
+	<array>
+		<!-- Meta (Facebook / Instagram) -->
+		<dict>
+			<key>SKAdNetworkIdentifier</key>
+			<string>v9wttpbfk9.skadnetwork</string>
+		</dict>
+		<dict>
+			<key>SKAdNetworkIdentifier</key>
+			<string>n38lu8286q.skadnetwork</string>
+		</dict>
+		<!-- AppsFlyer -->
+		<dict>
+			<key>SKAdNetworkIdentifier</key>
+			<string>8s468mfl3y.skadnetwork</string>
+		</dict>
+		<!-- Google Ads -->
+		<dict>
+			<key>SKAdNetworkIdentifier</key>
+			<string>cstr6suwn9.skadnetwork</string>
+		</dict>
+		<!-- TikTok / Pangle -->
+		<dict>
+			<key>SKAdNetworkIdentifier</key>
+			<string>22mmun2rn5.skadnetwork</string>
+		</dict>
+		<dict>
+			<key>SKAdNetworkIdentifier</key>
+			<string>238da6jt44.skadnetwork</string>
+		</dict>
+		<!-- Twitter / X -->
+		<dict>
+			<key>SKAdNetworkIdentifier</key>
+			<string>4fzdc2evr5.skadnetwork</string>
+		</dict>
+		<!-- Snapchat -->
+		<dict>
+			<key>SKAdNetworkIdentifier</key>
+			<string>424m5254lk.skadnetwork</string>
+		</dict>
+		<!-- Reddit -->
+		<dict>
+			<key>SKAdNetworkIdentifier</key>
+			<string>e5fvkxwrpn.skadnetwork</string>
+		</dict>
+		<!-- LinkedIn -->
+		<dict>
+			<key>SKAdNetworkIdentifier</key>
+			<string>g28c52eehv.skadnetwork</string>
+		</dict>
+		<!-- AppLovin -->
+		<dict>
+			<key>SKAdNetworkIdentifier</key>
+			<string>ludvb6z3bs.skadnetwork</string>
+		</dict>
+		<!-- Unity Ads -->
+		<dict>
+			<key>SKAdNetworkIdentifier</key>
+			<string>4dzt52r2t5.skadnetwork</string>
+		</dict>
+	</array>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+</dict>
+</plist>

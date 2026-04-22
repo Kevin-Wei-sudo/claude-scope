@@ -1,0 +1,42 @@
+name: ClaudeScope
+options:
+  bundleIdPrefix: io.sandwichlab
+  deploymentTarget:
+    iOS: "18.0"
+  xcodeVersion: "16.0"
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    MARKETING_VERSION: "1.0.1"
+    CURRENT_PROJECT_VERSION: "4"
+    SWIFT_VERSION: "5.9"
+    DEVELOPMENT_TEAM: MUC47AUXYQ
+    CODE_SIGN_STYLE: Automatic
+
+targets:
+  ClaudeScope:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+        excludes:
+          - "**/Widget/**"
+    resources:
+      - path: Sources/Resources
+        type: folder
+      - path: LaunchScreen.storyboard
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.sandwichlab.claudescope
+        INFOPLIST_FILE: Info.plist
+        GENERATE_INFOPLIST_FILE: false
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        TARGETED_DEVICE_FAMILY: "1"
+        SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: false
+    entitlements:
+      path: ClaudeScope.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.network.client: true
