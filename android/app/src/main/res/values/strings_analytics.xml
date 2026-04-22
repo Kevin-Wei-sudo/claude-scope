@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Analytics SDK credentials. Kept in a separate file so translators don't see them.
+     Values mirror ios/ClaudeScope/Info.plist so both platforms report into the same
+     Facebook / AppsFlyer apps. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="facebook_app_id" translatable="false">1073338921362002</string>
+    <string name="facebook_client_token" translatable="false">ab4d9bb25cccc1ee9a68e4f62c67e5dc</string>
+</resources>

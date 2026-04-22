@@ -1,0 +1,28 @@
+ClaudeScope keeps an eye on your Claude API usage so you never hit a rate limit mid-task. Sign in with OAuth, and real-time percentages for your 5-hour and 7-day windows sit right on your home screen.
+
+Features
+
+• Today's snapshot — a glance tells you how much of your weekly budget you've used
+• 5-hour and 7-day progress — side-by-side windows with live countdown to next reset
+• Per-model split — see how much Sonnet vs Opus you're burning this week
+• Trend preview — a compact bar chart across the last seven days
+• History view — 7-day / 30-day / 90-day ranges with peak usage, model split, and recent snapshots
+• Home screen widget — Small, Medium, and Large variants, click to jump into the app
+• Usage threshold alerts — get a notification when you cross your configured limit (50%–100%)
+• Background polling — refresh every 15 minutes / 30 minutes / 1 hour / 3 hours
+• Bilingual — English and Simplified Chinese
+
+Privacy
+
+• Your OAuth access token is stored locally and encrypted with Android Keystore
+• Your usage history never leaves your device
+• Usage API calls go only to Anthropic (api.anthropic.com / platform.claude.com)
+• Install attribution and anonymous in-app analytics are handled by AppsFlyer and Meta (Facebook) SDKs — no personal information, no sign-in data. You can reset or disable your Android advertising ID to opt out.
+• See the privacy policy for the full list of what AppsFlyer / Meta receive
+
+Requirements
+
+• Android 8.0 (API 26) or newer
+• An active Claude account
+
+ClaudeScope is an independent companion app. It is not affiliated with or endorsed by Anthropic.

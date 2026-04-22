@@ -1,0 +1,7 @@
+First public release.
+
+• Real-time 5-hour and 7-day usage windows
+• Per-model split (Sonnet / Opus) and history charts across 7 / 30 / 90 days
+• Home screen widget in three sizes
+• Threshold notifications
+• English and Simplified Chinese

@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+
+    <string name="app_name">ClaudeScope</string>
+
+    <!-- Bottom tabs -->
+    <string name="tab_home">Home</string>
+    <string name="tab_history">History</string>
+    <string name="tab_widget">Widget</string>
+    <string name="tab_settings">Settings</string>
+
+    <!-- Screen headers (Android-only; iOS embeds these inline) -->
+    <string name="home_section_title">Claude usage</string>
+    <string name="home_headline">Your limit, without the guessing.</string>
+    <string name="home_subheading">Real-time pacing for your 5-hour and 7-day windows.</string>
+    <string name="home_today_snapshot">Today\'s snapshot</string>
+    <string name="home_next_reset">Next reset</string>
+    <string name="home_window_5h">5 hour</string>
+    <string name="home_window_7d">7 day</string>
+    <string name="home_resets_label">Resets</string>
+    <string name="home_model_focus">Model focus</string>
+    <string name="home_model_sonnet_row">Sonnet model</string>
+    <string name="home_model_used_prefix">Used </string>
+    <string name="home_trend_preview">Trend preview</string>
+    <string name="home_trend_subtitle">Usage drift this week</string>
+    <string name="home_trend_empty">Not enough data yet</string>
+    <string name="home_summary_healthy">Comfortable headroom. Sonnet is still your main model this week.</string>
+    <string name="home_summary_moderate">Moderate usage. Keep an eye on it.</string>
+    <string name="home_summary_high">Usage is getting high. Consider pacing.</string>
+
+    <string name="history_section_title">Claude history</string>
+    <string name="history_headline">See the shape of your usage.</string>
+    <string name="history_subheading">Track longer arcs, compare models, and spot spikes before they become surprises.</string>
+    <string name="history_range_7d">7D</string>
+    <string name="history_range_30d">30D</string>
+    <string name="history_range_90d">90D</string>
+    <string name="history_trend_line">Trend line</string>
+    <string name="history_peak_label">%1$s peak: %2$d%%</string>
+    <string name="history_trend_legend">Mon to Sun, latest sync highlighted in teal.</string>
+    <string name="history_trend_empty">Not enough data yet</string>
+    <string name="history_model_split">Model split</string>
+    <string name="history_model_split_body">Sonnet carries most of the weekly load, with Opus appearing in shorter bursts.</string>
+    <string name="history_model_opus">Opus</string>
+    <string name="history_model_sonnet">Sonnet</string>
+    <string name="history_recent_snapshots">Recent snapshots</string>
+    <string name="history_no_snapshots">No snapshots yet</string>
+    <string name="history_pct_used">%1$d%% used</string>
+    <string name="history_snapshot_today">Today %1$s</string>
+    <string name="history_snapshot_yesterday">Yesterday %1$s</string>
+
+    <string name="widget_section_title">Claude widget</string>
+    <string name="widget_headline">Pin your usage on the home screen</string>
+    <string name="widget_subheading">Small, medium, and large variants to match your layout.</string>
+    <string name="widget_description">ClaudeScope 5-hour and 7-day usage at a glance.</string>
+
+    <string name="widget_preview_title">Live preview</string>
+    <string name="widget_preview_resets">Next reset %1$s</string>
+    <string name="widget_size_title">Widget size</string>
+    <string name="widget_size_small">Small</string>
+    <string name="widget_size_medium">Medium</string>
+    <string name="widget_size_large">Large</string>
+    <string name="widget_signals_title">Visible signals</string>
+    <string name="widget_signals_show_5h">Show 5-hour usage</string>
+    <string name="widget_signals_show_7d">Show 7-day usage</string>
+    <string name="widget_signals_show_reset">Show next reset</string>
+    <string name="widget_install_title">Add to home screen</string>
+    <string name="widget_install_instructions">Long-press your home screen, tap Widgets, find ClaudeScope, then drag the size you want.</string>
+    <string name="widget_install_cta">How to install</string>
+    <string name="widget_install_dialog_title">Add the ClaudeScope widget</string>
+    <string name="widget_install_dialog_body">1. Long-press any empty area on your home screen\n2. Tap \"Widgets\"\n3. Scroll to ClaudeScope\n4. Drag any size onto the home screen</string>
+    <string name="widget_install_dialog_ok">Got it</string>
+
+    <string name="settings_section_title">Claude settings</string>
+    <string name="settings_headline">Tune the app around your habits</string>
+    <string name="settings_subheading">Account, language, notifications, and refresh rhythm.</string>
+
+    <!-- Account card -->
+    <string name="settings_account_signed_in">Signed in to Claude</string>
+    <string name="settings_account_not_signed_in">Not signed in</string>
+    <string name="settings_account_sign_in_hint">Sign in to sync your real-time usage data.</string>
+    <string name="settings_account_last_refreshed">Last refreshed %1$s</string>
+    <string name="settings_account_never_refreshed">Never refreshed</string>
+    <string name="settings_sync_now">Sync now</string>
+    <string name="settings_sign_in_cta">Sign in with Claude</string>
+
+    <!-- Language -->
+    <string name="settings_language_title">Display language</string>
+    <string name="settings_language_system">Follow system</string>
+    <string name="settings_language_english">English</string>
+    <string name="settings_language_chinese">简体中文</string>
+
+    <!-- Notifications -->
+    <string name="settings_notifications_title">Notifications</string>
+    <string name="settings_threshold_alerts">Usage threshold alerts</string>
+    <string name="settings_threshold_warn_at">Warn me at %1$d%%</string>
+    <string name="settings_permission_required">Notification permission is required.</string>
+
+    <!-- Refresh rhythm -->
+    <string name="settings_refresh_title">Refresh rhythm</string>
+    <string name="settings_refresh_description">How often the app polls for your usage when in the background.</string>
+    <string name="settings_refresh_15m">15m</string>
+    <string name="settings_refresh_30m">30m</string>
+    <string name="settings_refresh_1h">1h</string>
+    <string name="settings_refresh_3h">3h</string>
+    <string name="settings_refresh_hint">Background polling minimum is 15m on Android.</string>
+
+    <!-- Ported from ios/.../en.lproj/Localizable.strings -->
+    <string name="language_follow_system">Follow System</string>
+    <string name="language_english">English</string>
+    <string name="language_simplified_chinese">Simplified Chinese</string>
+
+    <string name="signin_prompt">Sign in to view your usage.</string>
+    <string name="signin_button">Sign in with Claude</string>
+    <string name="signin_banner_title">Connect your account</string>
+    <string name="signin_banner_body">Authorize in your browser, then paste the code below.</string>
+    <string name="button_quit">Quit</string>
+    <string name="usage_five_hour_window">5-Hour Window</string>
+    <string name="usage_seven_day_window">7-Day Window</string>
+    <string name="usage_per_model">Per-Model (7 day)</string>
+    <string name="usage_model_opus">Opus</string>
+    <string name="usage_model_sonnet">Sonnet</string>
+    <string name="usage_extra">Extra Usage</string>
+    <string name="usage_updated_ago">Updated %1$s</string>
+    <string name="button_refresh">Refresh</string>
+    <string name="button_settings">Settings</string>
+    <string name="code_entry_prompt">Paste the code from your browser:</string>
+    <string name="code_entry_placeholder">code#state</string>
+    <string name="button_cancel">Cancel</string>
+    <string name="button_submit">Submit</string>
+    <string name="usage_resets">Resets %1$s</string>
+    <string name="value_off">Off</string>
+
+    <string name="settings_general">General</string>
+    <string name="settings_polling_interval">Polling Interval</string>
+    <string name="settings_notifications">Notifications</string>
+    <string name="settings_reset_reminders">Reset reminders</string>
+    <string name="settings_usage_intelligence">Usage Intelligence</string>
+    <string name="settings_account">Account</string>
+    <string name="settings_sign_out">Sign Out</string>
+    <string name="settings_language">Language</string>
+
+    <string name="chart_no_history">No history data yet.</string>
+    <string name="notification_title">ClaudeScope</string>
+    <string name="notification_body">%1$s usage has reached %2$d%%</string>
+    <string name="notification_reset_soon_title">Reset soon</string>
+    <string name="notification_reset_soon_body">%1$s resets in about 30 minutes.</string>
+    <string name="notification_reset_now_title">Budget reset</string>
+    <string name="notification_reset_now_body">%1$s has reset.</string>
+    <string name="window_5hour">5-hour window</string>
+    <string name="window_7day">7-day window</string>
+    <string name="window_extra">Extra usage</string>
+
+    <string name="intelligence_summary_risk_title">5-hour window is heating up</string>
+    <string name="intelligence_summary_risk_body">5-hour is at %1$d%% and 7-day is at %2$d%%. At your current pace, you may enter the high-risk zone in about %3$d hour(s).</string>
+    <string name="intelligence_summary_seven_day_risk_title">7-day window is getting tight</string>
+    <string name="intelligence_summary_seven_day_risk_body">7-day is at %1$d%% while 5-hour is at %2$d%%. Keep larger tasks for after the weekly reset.</string>
+    <string name="intelligence_summary_seven_day_action_title">7-day window needs pacing</string>
+    <string name="intelligence_summary_seven_day_action_body">7-day is at %1$d%% while 5-hour is at %2$d%%. Short tasks are fine, but pace bigger work.</string>
+    <string name="intelligence_summary_action_title">Usage is stable for now</string>
+    <string name="intelligence_summary_action_body">5-hour is at %1$d%% and 7-day is at %2$d%%. Things still look stable, but this window is worth pacing.</string>
+    <string name="intelligence_summary_opportunity_title">Windows look healthy</string>
+    <string name="intelligence_summary_opportunity_body">5-hour is at %1$d%% and 7-day is at %2$d%%. Both windows are still running at a low level.</string>
+    <string name="intelligence_insight_save_for_reset_title">Save heavy work for reset</string>
+    <string name="intelligence_insight_save_for_reset_body">You are close to the 5-hour risk zone and the next reset is fairly soon.</string>
+    <string name="intelligence_insight_seven_day_tight_title">Protect the 7-day budget</string>
+    <string name="intelligence_insight_seven_day_tight_body">Your weekly window is the limiting factor now. Keep heavy tasks for after the weekly reset.</string>
+    <string name="intelligence_insight_anomaly_title">Usage is running hot</string>
+    <string name="intelligence_insight_anomaly_body">Your recent usage pace is about %1$.1fx above your 7-day baseline.</string>
+    <string name="intelligence_insight_good_window_title">Good time for bigger tasks</string>
+    <string name="intelligence_insight_good_window_body">You still have room in both windows, so this is a strong time for summaries, reviews, or larger runs.</string>
+
+    <string name="error_oauth_state_mismatch">OAuth state mismatch — try again</string>
+    <string name="error_no_pending_oauth_flow">No pending OAuth flow</string>
+    <string name="error_invalid_token_response">Invalid token response</string>
+    <string name="error_token_exchange_failed">Token exchange failed</string>
+    <string name="error_token_response_parse_failed">Could not parse token response</string>
+    <string name="error_not_signed_in">Not signed in</string>
+    <string name="error_rate_limited">Rate limited — backing off to %1$d s</string>
+    <string name="error_http_status">HTTP %1$d</string>
+    <string name="error_token_refresh_failed_retry">Token refresh failed — will retry</string>
+    <string name="error_session_expired">Session expired — please sign in again</string>
+
+</resources>

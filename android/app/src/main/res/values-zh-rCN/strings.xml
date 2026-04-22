@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">ClaudeScope</string>
+
+    <string name="tab_home">首页</string>
+    <string name="tab_history">历史</string>
+    <string name="tab_widget">组件</string>
+    <string name="tab_settings">设置</string>
+
+    <string name="home_section_title">Claude 用量</string>
+    <string name="home_headline">用量心中有数</string>
+    <string name="home_subheading">实时掌握 5 小时和 7 天窗口的节奏。</string>
+    <string name="home_today_snapshot">今日概览</string>
+    <string name="home_next_reset">下次重置</string>
+    <string name="home_window_5h">5 小时</string>
+    <string name="home_window_7d">7 天</string>
+    <string name="home_resets_label">重置</string>
+    <string name="home_model_focus">模型统计</string>
+    <string name="home_model_sonnet_row">Sonnet 模型</string>
+    <string name="home_model_used_prefix">已用 </string>
+    <string name="home_trend_preview">趋势预览</string>
+    <string name="home_trend_subtitle">本周用量变化</string>
+    <string name="home_trend_empty">数据不足</string>
+    <string name="home_summary_healthy">当前额度比较充足，本周仍以 Sonnet 为主。</string>
+    <string name="home_summary_moderate">用量适中，留意一下。</string>
+    <string name="home_summary_high">用量偏高，建议控制节奏。</string>
+
+    <string name="history_section_title">Claude 历史</string>
+    <string name="history_headline">看清你的用量走势。</string>
+    <string name="history_subheading">查看更长周期的变化，对比模型分布，排查用量突增。</string>
+    <string name="history_range_7d">7D</string>
+    <string name="history_range_30d">30D</string>
+    <string name="history_range_90d">90D</string>
+    <string name="history_trend_line">趋势曲线</string>
+    <string name="history_peak_label">%1$s 峰值：%2$d%%</string>
+    <string name="history_trend_legend">按周一到周日展示，最新同步用青色高亮。</string>
+    <string name="history_trend_empty">数据不足</string>
+    <string name="history_model_split">模型占比</string>
+    <string name="history_model_split_body">Sonnet 承担了本周大部分负载，Opus 主要出现在较短的突发使用中。</string>
+    <string name="history_model_opus">Opus</string>
+    <string name="history_model_sonnet">Sonnet</string>
+    <string name="history_recent_snapshots">最近快照</string>
+    <string name="history_no_snapshots">暂无快照</string>
+    <string name="history_pct_used">已用 %1$d%%</string>
+    <string name="history_snapshot_today">今天 %1$s</string>
+    <string name="history_snapshot_yesterday">昨天 %1$s</string>
+
+    <string name="widget_section_title">Claude 组件</string>
+    <string name="widget_headline">把用量钉在桌面上</string>
+    <string name="widget_subheading">提供小、中、大三种尺寸。</string>
+    <string name="widget_description">一眼看到 ClaudeScope 5 小时和 7 天用量。</string>
+
+    <string name="widget_preview_title">实时预览</string>
+    <string name="widget_preview_resets">下次重置：%1$s</string>
+    <string name="widget_size_title">组件尺寸</string>
+    <string name="widget_size_small">小</string>
+    <string name="widget_size_medium">中</string>
+    <string name="widget_size_large">大</string>
+    <string name="widget_signals_title">显示内容</string>
+    <string name="widget_signals_show_5h">显示 5 小时用量</string>
+    <string name="widget_signals_show_7d">显示 7 天用量</string>
+    <string name="widget_signals_show_reset">显示下次重置</string>
+    <string name="widget_install_title">添加到桌面</string>
+    <string name="widget_install_instructions">长按桌面空白处，选择“小组件”，找到 ClaudeScope，拖到想要的位置。</string>
+    <string name="widget_install_cta">如何添加</string>
+    <string name="widget_install_dialog_title">添加 ClaudeScope 组件</string>
+    <string name="widget_install_dialog_body">1. 长按桌面空白处\n2. 选择“小组件”\n3. 滑动找到 ClaudeScope\n4. 拖动任意尺寸到桌面</string>
+    <string name="widget_install_dialog_ok">知道了</string>
+
+    <string name="settings_section_title">Claude 设置</string>
+    <string name="settings_headline">按你的习惯调节</string>
+    <string name="settings_subheading">账户、语言、通知和刷新节奏。</string>
+
+    <string name="settings_account_signed_in">已登录 Claude</string>
+    <string name="settings_account_not_signed_in">尚未登录</string>
+    <string name="settings_account_sign_in_hint">登录后可同步实时用量数据。</string>
+    <string name="settings_account_last_refreshed">上次刷新：%1$s</string>
+    <string name="settings_account_never_refreshed">尚未刷新</string>
+    <string name="settings_sync_now">立即同步</string>
+    <string name="settings_sign_in_cta">登录 Claude</string>
+
+    <string name="settings_language_title">显示语言</string>
+    <string name="settings_language_system">跟随系统</string>
+    <string name="settings_language_english">English</string>
+    <string name="settings_language_chinese">简体中文</string>
+
+    <string name="settings_notifications_title">通知</string>
+    <string name="settings_threshold_alerts">用量阈值提醒</string>
+    <string name="settings_threshold_warn_at">%1$d%% 时提醒</string>
+    <string name="settings_permission_required">需要通知权限。</string>
+
+    <string name="settings_refresh_title">刷新节奏</string>
+    <string name="settings_refresh_description">后台下 App 多久拉取一次用量。</string>
+    <string name="settings_refresh_15m">15分</string>
+    <string name="settings_refresh_30m">30分</string>
+    <string name="settings_refresh_1h">1小时</string>
+    <string name="settings_refresh_3h">3小时</string>
+    <string name="settings_refresh_hint">Android 后台轮询最短 15 分钟。</string>
+
+    <string name="language_follow_system">跟随系统</string>
+    <string name="language_english">English</string>
+    <string name="language_simplified_chinese">简体中文</string>
+
+    <string name="signin_prompt">登录后即可查看 Claude 用量。</string>
+    <string name="signin_button">登录 Claude</string>
+    <string name="signin_banner_title">连接你的账号</string>
+    <string name="signin_banner_body">在浏览器完成授权后，把代码粘贴到下方。</string>
+    <string name="button_quit">退出</string>
+    <string name="usage_five_hour_window">5 小时窗口</string>
+    <string name="usage_seven_day_window">7 天窗口</string>
+    <string name="usage_per_model">按模型统计（7天）</string>
+    <string name="usage_model_opus">Opus</string>
+    <string name="usage_model_sonnet">Sonnet</string>
+    <string name="usage_extra">额外额度</string>
+    <string name="usage_updated_ago">更新时间：%1$s</string>
+    <string name="button_refresh">刷新</string>
+    <string name="button_settings">设置</string>
+    <string name="code_entry_prompt">请粘贴浏览器中的代码：</string>
+    <string name="code_entry_placeholder">code#state</string>
+    <string name="button_cancel">取消</string>
+    <string name="button_submit">提交</string>
+    <string name="usage_resets">重置时间：%1$s</string>
+    <string name="value_off">关闭</string>
+
+    <string name="settings_general">常规</string>
+    <string name="settings_polling_interval">轮询间隔</string>
+    <string name="settings_notifications">通知</string>
+    <string name="settings_reset_reminders">重置提醒</string>
+    <string name="settings_usage_intelligence">用量智能</string>
+    <string name="settings_account">账户</string>
+    <string name="settings_sign_out">退出登录</string>
+    <string name="settings_language">语言</string>
+
+    <string name="chart_no_history">暂无历史数据。</string>
+    <string name="notification_title">ClaudeScope</string>
+    <string name="notification_body">%1$s 用量已达到 %2$d%%</string>
+    <string name="notification_reset_soon_title">即将重置</string>
+    <string name="notification_reset_soon_body">%1$s 约 30 分钟后重置。</string>
+    <string name="notification_reset_now_title">额度已重置</string>
+    <string name="notification_reset_now_body">%1$s 已完成重置。</string>
+    <string name="window_5hour">5 小时窗口</string>
+    <string name="window_7day">7 天窗口</string>
+    <string name="window_extra">额外用量</string>
+
+    <string name="intelligence_summary_risk_title">5 小时窗口升温</string>
+    <string name="intelligence_summary_risk_body">当前 5 小时 %1$d%%，7 天 %2$d%%。按这个速度，约 %3$d 小时后进入高风险区。</string>
+    <string name="intelligence_summary_seven_day_risk_title">7 天窗口吃紧</string>
+    <string name="intelligence_summary_seven_day_risk_body">当前 7 天 %1$d%%，5 小时 %2$d%%。大任务建议等周重置后再做。</string>
+    <string name="intelligence_summary_seven_day_action_title">7 天窗口需要控速</string>
+    <string name="intelligence_summary_seven_day_action_body">当前 7 天 %1$d%%，5 小时 %2$d%%。短任务可以继续，大任务先控节奏。</string>
+    <string name="intelligence_summary_action_title">当前状态稳定</string>
+    <string name="intelligence_summary_action_body">当前 5 小时 %1$d%%，7 天 %2$d%%。整体稳定，这个窗口稍微控一下节奏。</string>
+    <string name="intelligence_summary_opportunity_title">窗口比较宽松</string>
+    <string name="intelligence_summary_opportunity_body">当前 5 小时 %1$d%%，7 天 %2$d%%。两个窗口都处于低位。</string>
+    <string name="intelligence_insight_save_for_reset_title">重任务等重置后</string>
+    <string name="intelligence_insight_save_for_reset_body">你已接近 5 小时高风险区，而且离下次重置不远。</string>
+    <string name="intelligence_insight_seven_day_tight_title">保护 7 天额度</string>
+    <string name="intelligence_insight_seven_day_tight_body">现在主要受 7 天窗口限制，重任务建议等周重置后再做。</string>
+    <string name="intelligence_insight_anomaly_title">当前用量升温</string>
+    <string name="intelligence_insight_anomaly_body">最近使用速度约为 7 天基线的 %1$.1f 倍。</string>
+    <string name="intelligence_insight_good_window_title">适合做大一点的任务</string>
+    <string name="intelligence_insight_good_window_body">两个窗口都还有空间，适合总结、复盘或长任务。</string>
+
+    <string name="error_oauth_state_mismatch">OAuth 状态不匹配，请重试</string>
+    <string name="error_no_pending_oauth_flow">当前没有待处理的 OAuth 流程</string>
+    <string name="error_invalid_token_response">无效的令牌响应</string>
+    <string name="error_token_exchange_failed">令牌交换失败</string>
+    <string name="error_token_response_parse_failed">无法解析令牌响应</string>
+    <string name="error_not_signed_in">尚未登录</string>
+    <string name="error_rate_limited">已触发限流，刷新间隔已调整为 %1$d 秒</string>
+    <string name="error_http_status">HTTP %1$d</string>
+    <string name="error_token_refresh_failed_retry">令牌刷新失败，将稍后重试</string>
+    <string name="error_session_expired">会话已过期，请重新登录</string>
+
+</resources>

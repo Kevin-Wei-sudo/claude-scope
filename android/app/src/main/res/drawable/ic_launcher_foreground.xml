@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Adaptive icon foreground — "ClaudeScope" radar/scope concept mirroring the
+  iOS icon's white ring + small indicator dot.
+
+  Viewport 108x108. Safe zone is the inner 66x66 centered (21..87 on each
+  axis). All scope geometry is kept inside the safe zone so launcher cropping
+  can't clip it.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Outer ring: 6dp stroke drawn as an outer-circle minus inner-circle
+         via fillType=evenOdd. Radius 24. -->
+    <path
+        android:pathData="M54,30 a24,24 0 1 0 0.01,0 Z
+                          M54,38 a16,16 0 1 1 -0.01,0 Z"
+        android:fillColor="#FFFFFFFF"
+        android:fillType="evenOdd" />
+
+    <!-- Vertical crosshair, semi-transparent -->
+    <path
+        android:pathData="M53.2,37 h1.6 v34 h-1.6 z"
+        android:fillColor="#FFFFFFFF"
+        android:fillAlpha="0.6" />
+
+    <!-- Horizontal crosshair, semi-transparent -->
+    <path
+        android:pathData="M37,53.2 h34 v1.6 h-34 z"
+        android:fillColor="#FFFFFFFF"
+        android:fillAlpha="0.6" />
+
+    <!-- Indicator dot at ~2 o'clock, terracotta to match iOS accent -->
+    <path
+        android:pathData="M69,43 m-3.2,0 a3.2,3.2 0 1,0 6.4,0 a3.2,3.2 0 1,0 -6.4,0"
+        android:fillColor="#FFCC6B4A" />
+</vector>
