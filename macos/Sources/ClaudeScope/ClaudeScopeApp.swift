@@ -2,6 +2,12 @@ import SwiftUI
 
 @main
 struct ClaudeScopeApp: App {
+    // Must run before @StateObject autoclosures are evaluated so services read
+    // migrated values instead of empty defaults.
+    init() {
+        UserDefaultsMigration.runIfNeeded()
+    }
+
     @StateObject private var service = UsageService()
     @StateObject private var historyService = UsageHistoryService()
     @StateObject private var notificationService = NotificationService()

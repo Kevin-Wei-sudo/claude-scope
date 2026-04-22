@@ -1,7 +1,37 @@
+# macOS / SwiftPM
 .build/
 .swiftpm/
 *.zip
 *.dmg
+*.pkg
 *.app/
 .DS_Store
 xcuserdata/
+
+# iOS (Xcode + XcodeGen + CocoaPods)
+ios/**/build/
+ios/**/Pods/
+ios/**/DerivedData/
+# XcodeGen regenerates these from project.yml; CocoaPods regenerates Pods/ from Podfile.lock
+ios/ClaudeScope/ClaudeScope.xcodeproj/
+ios/ClaudeScope/ClaudeScope.xcworkspace/
+
+# Android (Gradle / Kotlin)
+android/.gradle/
+android/build/
+android/**/build/
+android/**/.cxx/
+android/captures/
+android/local.properties
+android/keystore.properties
+android/keystore/
+*.jks
+*.keystore
+
+# Exported assets / marketing renders (regeneratable)
+exports/
+
+# Apple certificates that don't belong in source
+AppleWWDRCAG3.cer
+*.mobileprovision
+*.provisionprofile

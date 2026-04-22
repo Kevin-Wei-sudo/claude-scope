@@ -15,10 +15,34 @@ The repo already has an App Store-oriented build flavor:
 Local command:
 
 ```sh
-make app-store
+make app-store-local
 ```
 
-That command currently produces a sandboxed local `.app`, but it is still ad-hoc signed.
+That command currently produces a sandboxed local `.app`, but it is still ad-hoc signed. It is for local verification of the sandbox flavor only — the resulting bundle cannot be uploaded to App Store Connect. The `app-store` alias from earlier revisions still works for back-compat.
+
+## Known limitation: no automatic storage migration for sandboxed builds
+
+App Store builds are sandboxed, so the process can only see `~/Library/Containers/io.sandwichlab.claudescope/Data/...` — not the non-sandboxed paths used by DMG/Homebrew builds:
+
+| Path | DMG / Homebrew build | App Store build |
+|------|---------------------|-----------------|
+| Credentials | `~/.config/claude-scope/credentials.json` | `~/Library/Containers/io.sandwichlab.claudescope/Data/Library/Application Support/ClaudeScope/credentials.json` |
+| History | `~/.config/claude-scope/history.json` | `~/Library/Containers/.../Application Support/ClaudeScope/history.json` |
+
+Consequences for a user switching from DMG/Homebrew → App Store:
+
+- They will need to sign in again (OAuth flow from scratch).
+- The history chart will appear empty until new data points accumulate.
+- UserDefaults settings (polling interval, notification thresholds, language) *are* preserved — they live in the sandbox's `Library/Preferences` domain keyed by the same bundle ID, and we additionally migrate from the old `com.local.ClaudeScope` domain via [UserDefaultsMigration.swift](macos/Sources/ClaudeScope/UserDefaultsMigration.swift).
+
+The non-sandboxed files under `~/.config/claude-scope` are physically unreadable from the sandboxed process without a temporary file-access entitlement or an explicit user-driven file picker. Both approaches are deferred until after the first App Store release; the first release accepts a one-time re-login as a known transition cost.
+
+If we later want to offer an opt-in import, the path is:
+
+1. Ship a one-shot "Import from previous install" action in Settings
+2. Use `NSOpenPanel` to let the user select `~/.config/claude-scope/`
+3. Read `credentials.json` and `history.json` via the security-scoped bookmark the picker hands back
+4. Save into the sandboxed Application Support directory
 
 ## What is still missing
 

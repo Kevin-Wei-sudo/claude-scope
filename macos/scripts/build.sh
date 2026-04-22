@@ -34,7 +34,9 @@ while [[ $# -gt 0 ]]; do
         --skip-build)
             SKIP_BUILD=1
             ;;
-        --app-store)
+        --app-store-local|--app-store)
+            # --app-store is kept as a back-compat alias; both produce the same
+            # sandboxed, ad-hoc-signed local .app. Neither is an App Store upload.
             APP_STORE_BUILD=1
             ;;
         *)
@@ -116,10 +118,15 @@ build_app_bundle() {
     ditto "$resource_bundle" "$APP_BUNDLE/Contents/Resources/$(basename "$resource_bundle")"
 
     echo "==> Compiling Asset Catalog..."
+    # actool only emits Assets.car when the catalog contains something beyond
+    # AppIcon. We carry an AccentColor asset specifically so actool produces the
+    # .car — App Store Connect validation (error 90546) requires it even when
+    # AppIcon.icns already exists.
     actool --compile "$APP_BUNDLE/Contents/Resources" \
            --platform macosx \
            --minimum-deployment-target 14.0 \
            --app-icon AppIcon \
+           --accent-color AccentColor \
            --output-partial-info-plist /dev/null \
            "$PROJECT_DIR/Resources/Assets.xcassets" > /dev/null
 
@@ -131,7 +138,11 @@ build_app_bundle() {
         ditto "$sparkle_framework" "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
     fi
 
-    echo "==> Codesigning (ad-hoc)..."
+    if [[ "$APP_STORE_BUILD" -eq 1 ]]; then
+        echo "==> Codesigning (ad-hoc + sandbox entitlements — local verification only, NOT an App Store upload)..."
+    else
+        echo "==> Codesigning (ad-hoc)..."
+    fi
     if [[ -d "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework" ]]; then
         while IFS= read -r nested_bundle; do
             codesign --force --sign - "$nested_bundle"
