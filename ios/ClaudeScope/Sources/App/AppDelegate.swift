@@ -19,8 +19,8 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         #if canImport(FBSDKCoreKit)
         // Must come BEFORE ApplicationDelegate.shared.application(...) so the
         // SDK reads these values during its own initialization.
-        Settings.shared.appID = "1073338921362002"
-        Settings.shared.clientToken = "ab4d9bb25cccc1ee9a68e4f62c67e5dc"
+        Settings.shared.appID = "2435202536976265"
+        Settings.shared.clientToken = "0d79d61ad91ec640cf3222d4752e9f68"
         // Enabled by default; `ATTrackingManager` still gates the IDFA, so this
         // flag only affects non-IDFA advertiser signals that Meta can still use.
         Settings.shared.isAdvertiserTrackingEnabled = true

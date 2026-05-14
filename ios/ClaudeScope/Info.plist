@@ -19,16 +19,16 @@
 		<dict>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>fb1073338921362002</string>
+				<string>fb2435202536976265</string>
 			</array>
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>7</string>
+	<string>9</string>
 	<key>FacebookAppID</key>
-	<string>1073338921362002</string>
+	<string>2435202536976265</string>
 	<key>FacebookClientToken</key>
-	<string>ab4d9bb25cccc1ee9a68e4f62c67e5dc</string>
+	<string>0d79d61ad91ec640cf3222d4752e9f68</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.utilities</string>
 	<key>LSApplicationQueriesSchemes</key>
