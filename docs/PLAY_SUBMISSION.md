@@ -1,14 +1,28 @@
 # Google Play — first submission checklist
 
-End-to-end recipe from "I have a Play Developer account approved" to "ClaudeScope is in production." Estimated wall-clock 3–4 weeks because of the mandatory 12-tester / 14-day closed test for personal accounts.
+End-to-end recipe from "I have a Play Developer account approved" to "ClaudeScope is in production."
+
+Account path: **US Organization** under B Green Financial Services LLC (D-U-N-S verified). Organization accounts skip the 12-tester / 14-day closed-test gate that personal accounts face — Step 7 below becomes optional once Step 0 passes.
 
 ---
 
 ## 0. Prerequisites
 
-- [ ] Play Developer account approved (identity verification done)
-- [ ] Anthropic OAuth client `9d1c250a-e61b-44d9-88ed-5944d1962f5e` still active (we share this with iOS/macOS, no Play-specific change needed)
-- [ ] Privacy policy URL is publicly reachable — reuse `https://kevin-wei-sudo.github.io/claude-scope/privacy.html` from the iOS/macOS site
+- [ ] Play Developer account approved (identity verification done) — **currently suspended, awaiting appeal**
+- [x] Anthropic OAuth client `9d1c250a-e61b-44d9-88ed-5944d1962f5e` still active (we share this with iOS/macOS, no Play-specific change needed)
+- [x] Privacy policy URL is publicly reachable — reuse `https://kevin-wei-sudo.github.io/claude-scope/privacy.html` from the iOS/macOS site
+
+## Prep work that can be done while waiting on the account appeal
+
+- [x] Audit code for data collection (AnalyticsService.kt, AndroidManifest) — matches [PLAY_DATA_SAFETY.md](PLAY_DATA_SAFETY.md)
+- [x] Data Safety form answers drafted — see [PLAY_DATA_SAFETY.md](PLAY_DATA_SAFETY.md)
+- [x] IARC Content Rating answers drafted — see [PLAY_CONTENT_RATING.md](PLAY_CONTENT_RATING.md)
+- [x] Fastlane metadata (en-US + zh-CN title/short/full/changelog) reviewed — see [android/fastlane/metadata/android/](../android/fastlane/metadata/android/)
+- [x] 512×512 app icon generated — `exports/play/icon_512.png` (regenerate via `python3 scripts/gen_play_assets.py`)
+- [x] 1024×500 feature graphic generated — `exports/play/feature_graphic.png`
+- [ ] Upload keystore generated — see Step 1 below (blocked: user must run `keytool` interactively)
+- [ ] Signed release AAB built — see Step 2 below (blocked on keystore)
+- [ ] Phone screenshots × 4 × 2 languages — see [PLAY_SCREENSHOTS.md](PLAY_SCREENSHOTS.md) (blocked on emulator session)
 
 ## 1. Generate the upload key (one-time, local-only)
 
