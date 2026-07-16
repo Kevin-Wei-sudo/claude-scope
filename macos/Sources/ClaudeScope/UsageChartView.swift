@@ -39,24 +39,24 @@ struct UsageChartView: View {
         let interpolated = hoverDate.flatMap {
             UsageChartInterpolation.interpolateValues(at: $0, in: points)
         }
+        let series5h = UsageChartInterpolation.stepSeries(from: points, keyPath: \.pct5h)
+        let series7d = UsageChartInterpolation.stepSeries(from: points, keyPath: \.pct7d)
 
         Chart {
-            ForEach(points) { point in
+            ForEach(series5h) { point in
                 LineMark(
                     x: .value("Time", point.timestamp),
-                    y: .value("Usage", point.pct5h * 100)
+                    y: .value("Usage", point.value * 100)
                 )
                 .foregroundStyle(by: .value("Window", "5h"))
-                .interpolationMethod(.catmullRom)
             }
 
-            ForEach(points) { point in
+            ForEach(series7d) { point in
                 LineMark(
                     x: .value("Time", point.timestamp),
-                    y: .value("Usage", point.pct7d * 100)
+                    y: .value("Usage", point.value * 100)
                 )
                 .foregroundStyle(by: .value("Window", "7d"))
-                .interpolationMethod(.catmullRom)
             }
 
             if let iv = interpolated {
@@ -188,53 +188,63 @@ struct UsageChartInterpolatedValues {
     let pct7d: Double
 }
 
+struct UsageSeriesPoint: Identifiable {
+    let id = UUID()
+    let timestamp: Date
+    let value: Double
+}
+
 enum UsageChartInterpolation {
-    static func catmullRom(_ p0: Double, _ p1: Double, _ p2: Double, _ p3: Double, t: Double) -> Double {
-        let t2 = t * t
-        let t3 = t2 * t
-        return 0.5 * (
-            (2 * p1) +
-            (-p0 + p2) * t +
-            (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 +
-            (-p0 + 3 * p1 - 3 * p2 + p3) * t3
-        )
+    /// Any drop larger than this between consecutive samples is treated as a window reset.
+    static let resetDropThreshold = 0.01
+
+    /// Builds a per-series polyline where window resets fall vertically: when a sample
+    /// drops below the previous one, the previous level is held until the drop timestamp.
+    static func stepSeries(
+        from points: [UsageDataPoint],
+        keyPath: KeyPath<UsageDataPoint, Double>
+    ) -> [UsageSeriesPoint] {
+        let sorted = points.sorted { $0.timestamp < $1.timestamp }
+        var series = [UsageSeriesPoint]()
+        for point in sorted {
+            let value = point[keyPath: keyPath]
+            if let last = series.last, value < last.value - resetDropThreshold {
+                series.append(UsageSeriesPoint(timestamp: point.timestamp, value: last.value))
+            }
+            series.append(UsageSeriesPoint(timestamp: point.timestamp, value: value))
+        }
+        return series
+    }
+
+    static func linearValue(at date: Date, in series: [UsageSeriesPoint]) -> Double? {
+        guard series.count >= 2, let first = series.first, let last = series.last else { return nil }
+        guard date >= first.timestamp, date <= last.timestamp else { return nil }
+
+        for i in 0..<(series.count - 1) {
+            let a = series[i]
+            let b = series[i + 1]
+            guard date >= a.timestamp, date <= b.timestamp else { continue }
+            let span = b.timestamp.timeIntervalSince(a.timestamp)
+            guard span > 0 else { return clampToUnitInterval(b.value) }
+            let t = date.timeIntervalSince(a.timestamp) / span
+            return clampToUnitInterval(a.value + (b.value - a.value) * t)
+        }
+
+        return nil
     }
 
     static func interpolateValues(at date: Date, in points: [UsageDataPoint]) -> UsageChartInterpolatedValues? {
         guard points.count >= 2 else { return nil }
 
-        let sorted = points.sorted { $0.timestamp < $1.timestamp }
+        let series5h = stepSeries(from: points, keyPath: \.pct5h)
+        let series7d = stepSeries(from: points, keyPath: \.pct7d)
 
-        if date < sorted.first!.timestamp || date > sorted.last!.timestamp {
+        guard let pct5h = linearValue(at: date, in: series5h),
+              let pct7d = linearValue(at: date, in: series7d) else {
             return UsageChartInterpolatedValues(date: date, pct5h: 0, pct7d: 0)
         }
 
-        for i in 0..<(sorted.count - 1) {
-            if date >= sorted[i].timestamp && date <= sorted[i + 1].timestamp {
-                let span = sorted[i + 1].timestamp.timeIntervalSince(sorted[i].timestamp)
-                let t = span > 0 ? date.timeIntervalSince(sorted[i].timestamp) / span : 0
-
-                let i0 = max(0, i - 1)
-                let i3 = min(sorted.count - 1, i + 2)
-
-                let pct5h = catmullRom(
-                    sorted[i0].pct5h, sorted[i].pct5h,
-                    sorted[i + 1].pct5h, sorted[i3].pct5h, t: t
-                )
-                let pct7d = catmullRom(
-                    sorted[i0].pct7d, sorted[i].pct7d,
-                    sorted[i + 1].pct7d, sorted[i3].pct7d, t: t
-                )
-
-                return UsageChartInterpolatedValues(
-                    date: date,
-                    pct5h: clampToUnitInterval(pct5h),
-                    pct7d: clampToUnitInterval(pct7d)
-                )
-            }
-        }
-
-        return nil
+        return UsageChartInterpolatedValues(date: date, pct5h: pct5h, pct7d: pct7d)
     }
 
     private static func clampToUnitInterval(_ value: Double) -> Double {

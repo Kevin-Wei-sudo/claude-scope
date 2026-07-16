@@ -29,6 +29,9 @@
 "button.cancel" = "取消";
 "button.submit" = "提交";
 "usage.resets" = "重置时间：%@";
+"usage.burn_rate" = "消耗速率";
+"usage.burn_rate.value" = "%.1f×（%d%%/小时）";
+"usage.burn_rate.baseline" = "1× = 匀速用完 5 小时额度（20%/小时）";
 "value.off" = "关闭";
 
 "settings.general" = "常规";
@@ -84,6 +87,10 @@
 "intelligence.insight.good_window.body" = "两个窗口都还有空间，适合总结、复盘或长任务。";
 "intelligence.insight.safe_budget.title" = "这个窗口先收一点";
 "intelligence.insight.safe_budget.body" = "为保持舒适区，建议这个 5 小时窗口再控制在 %d%% 以内。";
+"intelligence.insight.us_peak_now.title" = "现在是你的美东白天高消耗时段";
+"intelligence.insight.us_peak_now.body" = "过去 30 天，你在美东工作日白天（8AM–2PM ET）的实测消耗速率约是其他时段的 %.1f 倍。";
+"intelligence.insight.us_offpeak_now.title" = "当前处于你的低消耗时段";
+"intelligence.insight.us_offpeak_now.body" = "美东工作日白天（8AM–2PM ET）是你的高消耗时段（约 %.1f 倍）。现在不在该时段，历史上更适合跑重任务。";
 
 "error.updater_not_configured" = "当前版本未配置更新功能";
 "error.oauth_state_mismatch" = "OAuth 状态不匹配，请重试";

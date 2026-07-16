@@ -4,6 +4,122 @@ private let intelligenceHighRiskThreshold = 80.0
 private let sevenDayElevatedThreshold = 65.0
 private let peakWindowLookback: TimeInterval = 14 * 24 * 60 * 60
 
+/// Even pace that would consume exactly 100% of the 5-hour window: 20 pct-points/hour.
+let fiveHourEvenPacePctPerHour = 20.0
+private let burnRateLookback: TimeInterval = 60 * 60
+private let burnRateMinimumSpan: TimeInterval = 5 * 60
+private let burnRateResetDropThreshold = 0.01
+
+struct BurnRateSnapshot: Equatable {
+    /// Measured 5-hour-window growth in percentage points per hour.
+    let pctPerHour: Double
+    /// Measured pace relative to the even-consumption baseline (1.0 = would exactly exhaust the window).
+    let multiplier: Double
+}
+
+// MARK: - US daytime (ET peak) comparison
+
+/// Anthropic's former peak-throttling window: weekdays 8 AM–2 PM US Eastern.
+/// The throttle itself was removed in May 2026; we only use the window to compare
+/// the user's own measured burn rate inside vs outside it.
+private let usPeakLookback: TimeInterval = 30 * 24 * 60 * 60
+private let usPeakMaxSampleGap: TimeInterval = 20 * 60
+private let usPeakActiveDeltaPctPoints = 0.05
+private let usPeakMinimumActiveHours = 3.0
+let usPeakMinimumInsightRatio = 1.15
+
+private let easternCalendar: Calendar = {
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = TimeZone(identifier: "America/New_York") ?? .current
+    return calendar
+}()
+
+struct PeakPeriodComparison: Equatable {
+    /// Measured active burn rate (pct-points/hour) during US weekday daytime.
+    let peakRatePctPerHour: Double
+    /// Measured active burn rate (pct-points/hour) at all other times.
+    let offPeakRatePctPerHour: Double
+    let peakActiveHours: Double
+    let offPeakActiveHours: Double
+
+    /// How much faster the user burns during US daytime; guarded > 0 at construction.
+    var ratio: Double {
+        peakRatePctPerHour / offPeakRatePctPerHour
+    }
+}
+
+func isInUSDaytimePeak(_ date: Date) -> Bool {
+    let weekday = easternCalendar.component(.weekday, from: date)
+    guard weekday >= 2, weekday <= 6 else { return false }
+    let hour = easternCalendar.component(.hour, from: date)
+    return hour >= 8 && hour < 14
+}
+
+func usPeakPeriodComparison(points: [UsageDataPoint], now: Date) -> PeakPeriodComparison? {
+    let cutoff = now.addingTimeInterval(-usPeakLookback)
+    let recent = points
+        .filter { $0.timestamp >= cutoff && $0.timestamp <= now }
+        .sorted { $0.timestamp < $1.timestamp }
+    guard recent.count >= 2 else { return nil }
+
+    var peakBurn = 0.0, peakHours = 0.0
+    var offBurn = 0.0, offHours = 0.0
+
+    for (a, b) in zip(recent, recent.dropFirst()) {
+        let gap = b.timestamp.timeIntervalSince(a.timestamp)
+        guard gap > 0, gap <= usPeakMaxSampleGap else { continue }
+
+        let deltaPctPoints = (b.pct5h - a.pct5h) * 100
+        // Skip resets, idle stretches, and sampling jitter — compare active burn only.
+        guard deltaPctPoints > usPeakActiveDeltaPctPoints else { continue }
+
+        let hours = gap / 3600
+        if isInUSDaytimePeak(a.timestamp.addingTimeInterval(gap / 2)) {
+            peakBurn += deltaPctPoints
+            peakHours += hours
+        } else {
+            offBurn += deltaPctPoints
+            offHours += hours
+        }
+    }
+
+    guard peakHours >= usPeakMinimumActiveHours, offHours >= usPeakMinimumActiveHours else { return nil }
+    let offPeakRate = offBurn / offHours
+    guard offPeakRate > 0 else { return nil }
+
+    return PeakPeriodComparison(
+        peakRatePctPerHour: peakBurn / peakHours,
+        offPeakRatePctPerHour: offPeakRate,
+        peakActiveHours: peakHours,
+        offPeakActiveHours: offHours
+    )
+}
+
+func currentBurnRate(points: [UsageDataPoint], now: Date) -> BurnRateSnapshot? {
+    let cutoff = now.addingTimeInterval(-burnRateLookback)
+    var recent = points
+        .filter { $0.timestamp >= cutoff && $0.timestamp <= now }
+        .sorted { $0.timestamp < $1.timestamp }
+    guard recent.count >= 2 else { return nil }
+
+    // Measure only after the latest reset so the drop does not skew the slope.
+    var startIndex = 0
+    for i in 1..<recent.count where recent[i].pct5h < recent[i - 1].pct5h - burnRateResetDropThreshold {
+        startIndex = i
+    }
+    recent = Array(recent[startIndex...])
+
+    guard let first = recent.first, let last = recent.last else { return nil }
+    let span = last.timestamp.timeIntervalSince(first.timestamp)
+    guard span >= burnRateMinimumSpan else { return nil }
+
+    let pctPerHour = max(0, (last.pct5h - first.pct5h) * 100 / span * 3600)
+    return BurnRateSnapshot(
+        pctPerHour: pctPerHour,
+        multiplier: pctPerHour / fiveHourEvenPacePctPerHour
+    )
+}
+
 func projectedSlope(
     points: [UsageDataPoint],
     keyPath: KeyPath<UsageDataPoint, Double>,
@@ -229,6 +345,36 @@ func buildInsightItems(
                 emphasizedFragments: ["above your 7-day baseline", "7 天基线", String(format: "%.1f", multiplier)]
             )
         )
+    }
+
+    if let comparison = usPeakPeriodComparison(points: history, now: now),
+       comparison.ratio >= usPeakMinimumInsightRatio {
+        let ratioText = String(format: "%.1f", comparison.ratio)
+        if isInUSDaytimePeak(now) {
+            items.append(
+                UsageInsightItem(
+                    kind: .action,
+                    titleKey: "intelligence.insight.us_peak_now.title",
+                    titleFallback: "You're in your US-daytime hot zone",
+                    bodyKey: "intelligence.insight.us_peak_now.body",
+                    bodyFallback: "Over the last 30 days, your measured burn rate during US weekday daytime (8 AM\u{2013}2 PM ET) was about %.1fx your rate at other times.",
+                    bodyArguments: [comparison.ratio],
+                    emphasizedFragments: ["\(ratioText)x", ratioText, "US weekday daytime", "美东工作日白天"]
+                )
+            )
+        } else {
+            items.append(
+                UsageInsightItem(
+                    kind: .opportunity,
+                    titleKey: "intelligence.insight.us_offpeak_now.title",
+                    titleFallback: "Cheaper hours right now",
+                    bodyKey: "intelligence.insight.us_offpeak_now.body",
+                    bodyFallback: "US weekday daytime (8 AM\u{2013}2 PM ET) is your hot zone at about %.1fx. You're outside it now \u{2014} historically a better time for heavy work.",
+                    bodyArguments: [comparison.ratio],
+                    emphasizedFragments: ["\(ratioText)x", ratioText, "outside it now", "低消耗时段"]
+                )
+            )
+        }
     }
 
     if let peakHour = detectedPeakHour(points: history, now: now) {

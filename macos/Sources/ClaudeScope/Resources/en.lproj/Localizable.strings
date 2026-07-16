@@ -29,6 +29,9 @@
 "button.cancel" = "Cancel";
 "button.submit" = "Submit";
 "usage.resets" = "Resets %@";
+"usage.burn_rate" = "Burn rate";
+"usage.burn_rate.value" = "%.1f× (%d%%/hr)";
+"usage.burn_rate.baseline" = "1× = even pace for the 5-hour window (20%/hr)";
 "value.off" = "Off";
 
 "settings.general" = "General";
@@ -84,6 +87,10 @@
 "intelligence.insight.good_window.body" = "You still have room in both windows, so this is a strong time for summaries, reviews, or larger runs.";
 "intelligence.insight.safe_budget.title" = "Keep this window lean";
 "intelligence.insight.safe_budget.body" = "To stay comfortable before reset, try to keep another %d%% or less in this 5-hour window.";
+"intelligence.insight.us_peak_now.title" = "You're in your US-daytime hot zone";
+"intelligence.insight.us_peak_now.body" = "Over the last 30 days, your measured burn rate during US weekday daytime (8 AM–2 PM ET) was about %.1fx your rate at other times.";
+"intelligence.insight.us_offpeak_now.title" = "Cheaper hours right now";
+"intelligence.insight.us_offpeak_now.body" = "US weekday daytime (8 AM–2 PM ET) is your hot zone at about %.1fx. You're outside it now — historically a better time for heavy work.";
 
 "error.updater_not_configured" = "Updater is not configured for this build";
 "error.oauth_state_mismatch" = "OAuth state mismatch — try again";

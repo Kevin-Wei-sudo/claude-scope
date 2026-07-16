@@ -80,6 +80,10 @@ struct PopoverView: View {
             bucket: service.usage?.fiveHour
         )
 
+        if let burnRate = currentBurnRate(points: historyService.history.dataPoints, now: Date()) {
+            BurnRateRow(burnRate: burnRate)
+        }
+
         UsageBucketRow(
             label: localizedString("usage.seven_day_window", fallback: "7-Day Window", language: appLanguage),
             bucket: service.usage?.sevenDay
@@ -564,6 +568,53 @@ private struct UsageBucketRow: View {
     private var percentageText: String {
         guard let pct = bucket?.utilization else { return "—" }
         return "\(Int(round(pct)))%"
+    }
+}
+
+private struct BurnRateRow: View {
+    let burnRate: BurnRateSnapshot
+    @AppStorage(AppLanguage.storageKey) private var appLanguageRaw = AppLanguage.system.rawValue
+
+    private var appLanguage: AppLanguage {
+        AppLanguage.from(appLanguageRaw)
+    }
+
+    private var tint: Color {
+        switch burnRate.multiplier {
+        case ..<1.0: return .green
+        case 1.0..<2.0: return .yellow
+        default: return .red
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack {
+                Text(localizedString("usage.burn_rate", fallback: "Burn rate", language: appLanguage))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Text(
+                    localizedFormat(
+                        "usage.burn_rate.value",
+                        fallback: "%.1f× (%d%%/hr)",
+                        language: appLanguage,
+                        burnRate.multiplier,
+                        Int(round(burnRate.pctPerHour))
+                    )
+                )
+                .font(.caption.weight(.semibold))
+                .monospacedDigit()
+                .foregroundStyle(tint)
+            }
+            Text(localizedString(
+                "usage.burn_rate.baseline",
+                fallback: "1× = even pace for the 5-hour window (20%/hr)",
+                language: appLanguage
+            ))
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+        }
     }
 }
 
