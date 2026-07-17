@@ -555,13 +555,22 @@ private struct UsageBucketRow: View {
             }
             ProgressView(value: (bucket?.utilization ?? 0) / 100.0, total: 1.0)
                 .tint(colorForPct((bucket?.utilization ?? 0) / 100.0))
+                .padding(.top, timeElapsedFraction == nil ? 0 : 8)
                 .overlay {
                     if let fraction = timeElapsedFraction {
                         GeometryReader { geo in
-                            RoundedRectangle(cornerRadius: 1)
-                                .fill(Color.primary.opacity(0.55))
-                                .frame(width: 2, height: 10)
-                                .position(x: geo.size.width * fraction, y: geo.size.height / 2)
+                            VStack(spacing: 0) {
+                                Image(systemName: "arrowtriangle.down.fill")
+                                    .font(.system(size: 7, weight: .bold))
+                                RoundedRectangle(cornerRadius: 1)
+                                    .frame(width: 2, height: 9)
+                            }
+                            .foregroundStyle(Color.primary.opacity(0.8))
+                            .position(
+                                x: min(max(geo.size.width * fraction, 4), geo.size.width - 4),
+                                // marker is 16pt tall; anchor its bottom to the bar's bottom edge
+                                y: geo.size.height - 8
+                            )
                         }
                         .help(
                             localizedFormat(
