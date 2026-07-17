@@ -19,6 +19,8 @@ jobs:
       REPOSITORY_NAME: ${{ github.event.repository.name }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Configure GitHub Pages
         id: configure_pages
@@ -49,7 +51,24 @@ jobs:
           gh api "repos/${GITHUB_REPOSITORY}/releases/generate-notes" \
             --method POST \
             -f tag_name="${GITHUB_REF_NAME}" \
-            --jq '.body' > dist/release-notes.md
+            --jq '.body' > dist/generated-notes.md
+
+          # generate-notes only lists merged PRs; prepend commit subjects so
+          # releases cut from direct pushes still describe what changed.
+          prev_tag="$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || true)"
+          if [[ -n "$prev_tag" ]]; then
+            commit_range="${prev_tag}..${GITHUB_REF_NAME}"
+          else
+            commit_range="${GITHUB_REF_NAME}"
+          fi
+
+          {
+            echo "## Changes"
+            echo
+            git log --no-merges --pretty='- %s' "$commit_range"
+            echo
+            cat dist/generated-notes.md
+          } > dist/release-notes.md
 
           python3 - <<'PY'
           import json
