@@ -5,6 +5,7 @@ struct PopoverView: View {
     @ObservedObject var historyService: UsageHistoryService
     @ObservedObject var notificationService: NotificationService
     @ObservedObject var intelligenceService: UsageIntelligenceService
+    @ObservedObject var announcementService: AnnouncementService
     @ObservedObject var appUpdater: AppUpdater
     @AppStorage("setupComplete") private var setupComplete = false
     @AppStorage(AppLanguage.storageKey) private var appLanguageRaw = AppLanguage.system.rawValue
@@ -70,6 +71,15 @@ struct PopoverView: View {
 
     @ViewBuilder
     private var usageView: some View {
+        if let announcement = announcementService.banner {
+            AnnouncementBanner(
+                announcement: announcement,
+                language: appLanguage,
+                onDismiss: { announcementService.dismiss(announcement) }
+            )
+            Divider()
+        }
+
         if let snapshot = intelligenceService.snapshot {
             IntelligenceSection(snapshot: snapshot, language: appLanguage)
             Divider()
@@ -184,6 +194,58 @@ struct PopoverView: View {
         }
         .buttonStyle(.borderless)
         .font(.caption)
+    }
+}
+
+private struct AnnouncementBanner: View {
+    let announcement: Announcement
+    let language: AppLanguage
+    let onDismiss: () -> Void
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: "megaphone.fill")
+                .font(.caption)
+                .foregroundStyle(.purple)
+                .padding(.top, 2)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(announcement.localizedTitle(for: language))
+                    .font(.caption.weight(.semibold))
+                    .lineLimit(nil)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text(announcement.localizedBody(for: language))
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(nil)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                if let urlString = announcement.url, let url = URL(string: urlString) {
+                    Link(
+                        localizedString("announcement.details", fallback: "Details", language: language),
+                        destination: url
+                    )
+                    .font(.caption2)
+                }
+            }
+
+            Spacer(minLength: 0)
+
+            Button(action: onDismiss) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 8, weight: .bold))
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.borderless)
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.purple.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(Color.purple.opacity(0.18), lineWidth: 1)
+        )
     }
 }
 

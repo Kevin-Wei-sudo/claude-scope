@@ -12,6 +12,7 @@ struct ClaudeScopeApp: App {
     @StateObject private var historyService = UsageHistoryService()
     @StateObject private var notificationService = NotificationService()
     @StateObject private var intelligenceService = UsageIntelligenceService()
+    @StateObject private var announcementService = AnnouncementService()
     @StateObject private var appUpdater = AppUpdater()
     @AppStorage(AppLanguage.storageKey) private var appLanguageRaw = AppLanguage.system.rawValue
 
@@ -26,6 +27,7 @@ struct ClaudeScopeApp: App {
                 historyService: historyService,
                 notificationService: notificationService,
                 intelligenceService: intelligenceService,
+                announcementService: announcementService,
                 appUpdater: appUpdater
             )
             .environment(\.locale, appLanguage.locale)
@@ -45,6 +47,7 @@ struct ClaudeScopeApp: App {
                     service.intelligenceService = intelligenceService
                     intelligenceService.refresh(usage: service.usage, history: historyService.history)
                     service.startPolling()
+                    announcementService.start()
                 }
         }
         .menuBarExtraStyle(.window)

@@ -33,6 +33,7 @@
 "usage.burn_rate.value" = "%.1f× (%d%%/hr)";
 "usage.burn_rate.baseline" = "1× = even pace for the 5-hour window (20%/hr)";
 "usage.window_elapsed" = "Time elapsed in this window: %d%%";
+"announcement.details" = "Details";
 "value.off" = "Off";
 
 "settings.general" = "General";

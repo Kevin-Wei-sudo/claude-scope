@@ -1,0 +1,17 @@
+{
+  "announcements": [
+    {
+      "id": "2026-05-06-5h-limits-doubled",
+      "date": "2026-05-06",
+      "url": "https://www.anthropic.com/news/higher-limits-spacex",
+      "title": {
+        "en": "Anthropic doubled 5-hour limits, removed peak-hour throttling",
+        "zh-Hans": "Anthropic 将 5 小时额度翻倍，并取消高峰时段限流"
+      },
+      "body": {
+        "en": "Since May 6, 2026 the 5-hour window limits are doubled for Pro, Max, Team and seat-based Enterprise plans, and the weekday 8 AM–2 PM ET peak-hour reduction no longer applies. Weekly (7-day) caps are unchanged.",
+        "zh-Hans": "自 2026 年 5 月 6 日起，Pro、Max、Team 及按席位的 Enterprise 套餐的 5 小时窗口额度翻倍，工作日美东 8AM–2PM 的高峰限流同时取消。周（7 天）上限保持不变。"
+      }
+    }
+  ]
+}
