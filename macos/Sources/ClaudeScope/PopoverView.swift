@@ -77,7 +77,8 @@ struct PopoverView: View {
 
         UsageBucketRow(
             label: localizedString("usage.five_hour_window", fallback: "5-Hour Window", language: appLanguage),
-            bucket: service.usage?.fiveHour
+            bucket: service.usage?.fiveHour,
+            windowDuration: 5 * 60 * 60
         )
 
         if let burnRate = currentBurnRate(points: historyService.history.dataPoints, now: Date()) {
@@ -86,7 +87,8 @@ struct PopoverView: View {
 
         UsageBucketRow(
             label: localizedString("usage.seven_day_window", fallback: "7-Day Window", language: appLanguage),
-            bucket: service.usage?.sevenDay
+            bucket: service.usage?.sevenDay,
+            windowDuration: 7 * 24 * 60 * 60
         )
 
         let opus = service.usage?.sevenDayOpus
@@ -529,10 +531,16 @@ private struct CodeEntryView: View {
 private struct UsageBucketRow: View {
     let label: String
     let bucket: UsageBucket?
+    var windowDuration: TimeInterval? = nil
     @AppStorage(AppLanguage.storageKey) private var appLanguageRaw = AppLanguage.system.rawValue
 
     private var appLanguage: AppLanguage {
         AppLanguage.from(appLanguageRaw)
+    }
+
+    private var timeElapsedFraction: Double? {
+        guard let windowDuration else { return nil }
+        return windowElapsedFraction(resetDate: bucket?.resetsAtDate, windowDuration: windowDuration)
     }
 
     var body: some View {
@@ -547,6 +555,24 @@ private struct UsageBucketRow: View {
             }
             ProgressView(value: (bucket?.utilization ?? 0) / 100.0, total: 1.0)
                 .tint(colorForPct((bucket?.utilization ?? 0) / 100.0))
+                .overlay {
+                    if let fraction = timeElapsedFraction {
+                        GeometryReader { geo in
+                            RoundedRectangle(cornerRadius: 1)
+                                .fill(Color.primary.opacity(0.55))
+                                .frame(width: 2, height: 10)
+                                .position(x: geo.size.width * fraction, y: geo.size.height / 2)
+                        }
+                        .help(
+                            localizedFormat(
+                                "usage.window_elapsed",
+                                fallback: "Time elapsed in this window: %d%%",
+                                language: appLanguage,
+                                Int(round(fraction * 100))
+                            )
+                        )
+                    }
+                }
             if let resetDate = bucket?.resetsAtDate {
                 Text(
                     localizedFormat(

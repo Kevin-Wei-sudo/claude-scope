@@ -32,6 +32,7 @@
 "usage.burn_rate" = "消耗速率";
 "usage.burn_rate.value" = "%.1f×（%d%%/小时）";
 "usage.burn_rate.baseline" = "1× = 匀速用完 5 小时额度（20%/小时）";
+"usage.window_elapsed" = "窗口时间已过 %d%%";
 "value.off" = "关闭";
 
 "settings.general" = "常规";

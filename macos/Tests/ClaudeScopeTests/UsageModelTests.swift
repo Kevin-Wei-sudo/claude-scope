@@ -1,6 +1,36 @@
 import XCTest
 @testable import ClaudeScope
 
+final class WindowElapsedFractionTests: XCTestCase {
+    func testHalfwayThroughFiveHourWindow() {
+        let now = Date(timeIntervalSince1970: 100_000)
+        let fraction = windowElapsedFraction(
+            resetDate: now.addingTimeInterval(2.5 * 3600),
+            windowDuration: 5 * 3600,
+            now: now
+        )
+        XCTAssertEqual(fraction ?? -1, 0.5, accuracy: 0.0001)
+    }
+
+    func testClampsWhenResetDateIsStale() {
+        let now = Date(timeIntervalSince1970: 100_000)
+        // Reset already passed (stale data) -> fully elapsed.
+        XCTAssertEqual(
+            windowElapsedFraction(resetDate: now.addingTimeInterval(-60), windowDuration: 5 * 3600, now: now),
+            1
+        )
+        // Reset further away than the window length -> clamp to just started.
+        XCTAssertEqual(
+            windowElapsedFraction(resetDate: now.addingTimeInterval(6 * 3600), windowDuration: 5 * 3600, now: now),
+            0
+        )
+    }
+
+    func testNilWithoutResetDate() {
+        XCTAssertNil(windowElapsedFraction(resetDate: nil, windowDuration: 5 * 3600, now: Date(timeIntervalSince1970: 0)))
+    }
+}
+
 final class UsageModelTests: XCTestCase {
     func testResetDateParsesTimestampWithoutTimezoneAsUTC() throws {
         let bucket = UsageBucket(

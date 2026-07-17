@@ -122,6 +122,14 @@ struct UsageBucket: Codable {
     }
 }
 
+/// Fraction of a usage window already elapsed (0...1), derived from its reset date.
+/// Returns nil when there is no reset date or the window length is unknown.
+func windowElapsedFraction(resetDate: Date?, windowDuration: TimeInterval, now: Date = Date()) -> Double? {
+    guard let resetDate, windowDuration > 0 else { return nil }
+    let remaining = resetDate.timeIntervalSince(now)
+    return min(max(1 - remaining / windowDuration, 0), 1)
+}
+
 struct ExtraUsage: Codable {
     let isEnabled: Bool
     let utilization: Double?
