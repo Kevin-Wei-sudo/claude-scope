@@ -103,12 +103,20 @@ struct PopoverView: View {
 
         let opus = service.usage?.sevenDayOpus
         let sonnet = service.usage?.sevenDaySonnet
+        let scopedBuckets = service.usage?.scopedWeeklyBuckets ?? []
         let additionalBuckets = (service.usage?.additionalBuckets ?? [:]).sorted { $0.key < $1.key }
-        if (opus?.utilization != nil) || (sonnet?.utilization != nil) || !additionalBuckets.isEmpty {
+        if (opus?.utilization != nil) || (sonnet?.utilization != nil) || !additionalBuckets.isEmpty || !scopedBuckets.isEmpty {
             Divider()
             Text(localizedString("usage.per_model", fallback: "Per-Model (7 day)", language: appLanguage))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
+            ForEach(scopedBuckets, id: \.label) { entry in
+                UsageBucketRow(
+                    label: entry.label,
+                    bucket: entry.bucket,
+                    windowDuration: 7 * 24 * 60 * 60
+                )
+            }
             if let opus, opus.utilization != nil {
                 UsageBucketRow(
                     label: localizedString("usage.model.opus_only", fallback: "Opus only", language: appLanguage),

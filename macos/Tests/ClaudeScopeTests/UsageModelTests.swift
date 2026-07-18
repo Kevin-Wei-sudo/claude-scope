@@ -125,6 +125,50 @@ final class UsageModelTests: XCTestCase {
         XCTAssertEqual(reconciled.additionalBuckets["seven_day_fable"]?.utilization, 82.0)
     }
 
+    func testScopedWeeklyBucketsParseFableFromLimitsArray() throws {
+        let json = """
+        {
+          "seven_day": {"utilization": 55.0, "resets_at": "2026-07-19T11:00:00Z"},
+          "limits": [
+            {"kind": "session", "group": "session", "percent": 51, "severity": "normal",
+             "resets_at": "2026-07-18T13:10:00Z", "scope": null, "is_active": false},
+            {"kind": "weekly_all", "group": "weekly", "percent": 55, "severity": "normal",
+             "resets_at": "2026-07-19T11:00:00Z", "scope": null, "is_active": false},
+            {"kind": "weekly_scoped", "group": "weekly", "percent": 78, "severity": "warning",
+             "resets_at": "2026-07-19T11:00:00Z",
+             "scope": {"model": {"id": null, "display_name": "Fable"}, "surface": null},
+             "is_active": true}
+          ]
+        }
+        """
+        let response = try JSONDecoder().decode(UsageResponse.self, from: Data(json.utf8))
+
+        let scoped = response.scopedWeeklyBuckets
+        XCTAssertEqual(scoped.count, 1)
+        XCTAssertEqual(scoped.first?.label, "Fable")
+        XCTAssertEqual(scoped.first?.bucket.utilization, 78)
+        XCTAssertNotNil(scoped.first?.bucket.resetsAtDate)
+        // The limits array itself must not leak into the dynamic bucket collection.
+        XCTAssertTrue(response.additionalBuckets.isEmpty)
+    }
+
+    func testScopedWeeklyBucketsSurviveReconciliation() throws {
+        let entry = UsageLimitEntry(
+            kind: "weekly_scoped", percent: 78, severity: "warning",
+            resetsAt: "2026-07-19T11:00:00Z",
+            scope: .init(model: .init(id: nil, displayName: "Fable"), surface: nil),
+            isActive: true
+        )
+        let response = UsageResponse(
+            fiveHour: nil, sevenDay: nil, sevenDayOpus: nil, sevenDaySonnet: nil,
+            extraUsage: nil, limits: [entry]
+        )
+
+        let reconciled = response.reconciled(with: nil, now: date("2026-07-18T00:00:00Z"))
+
+        XCTAssertEqual(reconciled.scopedWeeklyBuckets.first?.label, "Fable")
+    }
+
     func testBucketKeyDisplayNames() {
         XCTAssertEqual(displayName(forBucketKey: "seven_day_fable"), "Fable 5")
         XCTAssertEqual(displayName(forBucketKey: "seven_day_omelette"), "Claude Design")

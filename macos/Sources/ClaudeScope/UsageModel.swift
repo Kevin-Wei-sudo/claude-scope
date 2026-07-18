@@ -1,11 +1,47 @@
 import Foundation
 
+/// One entry of the API's `limits` array. `weekly_scoped` entries carry
+/// model-specific weekly windows (e.g. Fable 5's separate allowance).
+struct UsageLimitEntry: Codable, Equatable {
+    let kind: String?
+    let percent: Double?
+    let severity: String?
+    let resetsAt: String?
+    let scope: Scope?
+    let isActive: Bool?
+
+    struct Scope: Codable, Equatable {
+        let model: Target?
+        let surface: Target?
+    }
+
+    struct Target: Codable, Equatable {
+        let id: String?
+        let displayName: String?
+
+        enum CodingKeys: String, CodingKey {
+            case id
+            case displayName = "display_name"
+        }
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case kind
+        case percent
+        case severity
+        case resetsAt = "resets_at"
+        case scope
+        case isActive = "is_active"
+    }
+}
+
 struct UsageResponse: Codable {
     let fiveHour: UsageBucket?
     let sevenDay: UsageBucket?
     let sevenDayOpus: UsageBucket?
     let sevenDaySonnet: UsageBucket?
     let extraUsage: ExtraUsage?
+    var limits: [UsageLimitEntry] = []
     /// Model/feature buckets the API serves under keys we don't hard-code
     /// (e.g. a Fable 5 weekly window). Keyed by the raw API field name; only
     /// populated entries that look like usage buckets are kept, so new
@@ -18,11 +54,25 @@ struct UsageResponse: Codable {
         case sevenDayOpus = "seven_day_opus"
         case sevenDaySonnet = "seven_day_sonnet"
         case extraUsage = "extra_usage"
+        case limits
     }
 
     private static let handledKeys: Set<String> = [
-        "five_hour", "seven_day", "seven_day_opus", "seven_day_sonnet", "extra_usage",
+        "five_hour", "seven_day", "seven_day_opus", "seven_day_sonnet", "extra_usage", "limits",
     ]
+
+    /// Model/surface-scoped weekly windows from the `limits` array, as
+    /// displayable buckets (e.g. ("Fable", 78%)).
+    var scopedWeeklyBuckets: [(label: String, bucket: UsageBucket)] {
+        limits
+            .filter { $0.kind == "weekly_scoped" && $0.percent != nil }
+            .map { entry in
+                let label = entry.scope?.model?.displayName
+                    ?? entry.scope?.surface?.displayName
+                    ?? "Scoped"
+                return (label, UsageBucket(utilization: entry.percent, resetsAt: entry.resetsAt))
+            }
+    }
 
     private struct DynamicKey: CodingKey {
         let stringValue: String
@@ -37,6 +87,7 @@ struct UsageResponse: Codable {
         sevenDayOpus: UsageBucket?,
         sevenDaySonnet: UsageBucket?,
         extraUsage: ExtraUsage?,
+        limits: [UsageLimitEntry] = [],
         additionalBuckets: [String: UsageBucket] = [:]
     ) {
         self.fiveHour = fiveHour
@@ -44,6 +95,7 @@ struct UsageResponse: Codable {
         self.sevenDayOpus = sevenDayOpus
         self.sevenDaySonnet = sevenDaySonnet
         self.extraUsage = extraUsage
+        self.limits = limits
         self.additionalBuckets = additionalBuckets
     }
 
@@ -54,6 +106,7 @@ struct UsageResponse: Codable {
         sevenDayOpus = try container.decodeIfPresent(UsageBucket.self, forKey: .sevenDayOpus)
         sevenDaySonnet = try container.decodeIfPresent(UsageBucket.self, forKey: .sevenDaySonnet)
         extraUsage = try container.decodeIfPresent(ExtraUsage.self, forKey: .extraUsage)
+        limits = (try? container.decodeIfPresent([UsageLimitEntry].self, forKey: .limits)) ?? []
 
         var extras = [String: UsageBucket]()
         let dynamic = try decoder.container(keyedBy: DynamicKey.self)
@@ -75,6 +128,7 @@ struct UsageResponse: Codable {
         try container.encodeIfPresent(sevenDayOpus, forKey: .sevenDayOpus)
         try container.encodeIfPresent(sevenDaySonnet, forKey: .sevenDaySonnet)
         try container.encodeIfPresent(extraUsage, forKey: .extraUsage)
+        try container.encode(limits, forKey: .limits)
         var dynamic = encoder.container(keyedBy: DynamicKey.self)
         for (key, bucket) in additionalBuckets {
             try dynamic.encode(bucket, forKey: DynamicKey(stringValue: key)!)
@@ -104,6 +158,7 @@ struct UsageResponse: Codable {
                 now: now
             ),
             extraUsage: extraUsage,
+            limits: limits,
             additionalBuckets: additionalBuckets
         )
     }
