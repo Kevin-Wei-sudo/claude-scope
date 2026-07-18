@@ -6,6 +6,11 @@ struct UsageResponse: Codable {
     let sevenDayOpus: UsageBucket?
     let sevenDaySonnet: UsageBucket?
     let extraUsage: ExtraUsage?
+    /// Model/feature buckets the API serves under keys we don't hard-code
+    /// (e.g. a Fable 5 weekly window). Keyed by the raw API field name; only
+    /// populated entries that look like usage buckets are kept, so new
+    /// buckets appear in the UI without an app update.
+    var additionalBuckets: [String: UsageBucket] = [:]
 
     enum CodingKeys: String, CodingKey {
         case fiveHour = "five_hour"
@@ -13,6 +18,67 @@ struct UsageResponse: Codable {
         case sevenDayOpus = "seven_day_opus"
         case sevenDaySonnet = "seven_day_sonnet"
         case extraUsage = "extra_usage"
+    }
+
+    private static let handledKeys: Set<String> = [
+        "five_hour", "seven_day", "seven_day_opus", "seven_day_sonnet", "extra_usage",
+    ]
+
+    private struct DynamicKey: CodingKey {
+        let stringValue: String
+        let intValue: Int? = nil
+        init?(stringValue: String) { self.stringValue = stringValue }
+        init?(intValue: Int) { nil }
+    }
+
+    init(
+        fiveHour: UsageBucket?,
+        sevenDay: UsageBucket?,
+        sevenDayOpus: UsageBucket?,
+        sevenDaySonnet: UsageBucket?,
+        extraUsage: ExtraUsage?,
+        additionalBuckets: [String: UsageBucket] = [:]
+    ) {
+        self.fiveHour = fiveHour
+        self.sevenDay = sevenDay
+        self.sevenDayOpus = sevenDayOpus
+        self.sevenDaySonnet = sevenDaySonnet
+        self.extraUsage = extraUsage
+        self.additionalBuckets = additionalBuckets
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        fiveHour = try container.decodeIfPresent(UsageBucket.self, forKey: .fiveHour)
+        sevenDay = try container.decodeIfPresent(UsageBucket.self, forKey: .sevenDay)
+        sevenDayOpus = try container.decodeIfPresent(UsageBucket.self, forKey: .sevenDayOpus)
+        sevenDaySonnet = try container.decodeIfPresent(UsageBucket.self, forKey: .sevenDaySonnet)
+        extraUsage = try container.decodeIfPresent(ExtraUsage.self, forKey: .extraUsage)
+
+        var extras = [String: UsageBucket]()
+        let dynamic = try decoder.container(keyedBy: DynamicKey.self)
+        for key in dynamic.allKeys where !Self.handledKeys.contains(key.stringValue) {
+            guard let bucket = try? dynamic.decode(UsageBucket.self, forKey: key),
+                  bucket.utilization != nil,
+                  bucket.resetsAtDate != nil else {
+                continue
+            }
+            extras[key.stringValue] = bucket
+        }
+        additionalBuckets = extras
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(fiveHour, forKey: .fiveHour)
+        try container.encodeIfPresent(sevenDay, forKey: .sevenDay)
+        try container.encodeIfPresent(sevenDayOpus, forKey: .sevenDayOpus)
+        try container.encodeIfPresent(sevenDaySonnet, forKey: .sevenDaySonnet)
+        try container.encodeIfPresent(extraUsage, forKey: .extraUsage)
+        var dynamic = encoder.container(keyedBy: DynamicKey.self)
+        for (key, bucket) in additionalBuckets {
+            try dynamic.encode(bucket, forKey: DynamicKey(stringValue: key)!)
+        }
     }
 
     func reconciled(with previous: UsageResponse?, now: Date = Date()) -> UsageResponse {
@@ -37,8 +103,28 @@ struct UsageResponse: Codable {
                 resetInterval: 7 * 24 * 60 * 60,
                 now: now
             ),
-            extraUsage: extraUsage
+            extraUsage: extraUsage,
+            additionalBuckets: additionalBuckets
         )
+    }
+}
+
+/// Human-readable label for a dynamically discovered usage bucket key.
+/// Known internal codenames are mapped; anything else is prettified from the
+/// raw key so future buckets are still presentable.
+func displayName(forBucketKey key: String) -> String {
+    switch key {
+    case "seven_day_fable", "fable": return "Fable 5"
+    case "seven_day_omelette", "omelette_promotional": return "Claude Design"
+    case "seven_day_cowork": return "Cowork"
+    case "seven_day_routines": return "Routines"
+    case "seven_day_oauth_apps": return "OAuth apps"
+    default:
+        let trimmed = key.hasPrefix("seven_day_") ? String(key.dropFirst("seven_day_".count)) : key
+        return trimmed
+            .split(separator: "_")
+            .map { $0.prefix(1).uppercased() + $0.dropFirst() }
+            .joined(separator: " ")
     }
 }
 

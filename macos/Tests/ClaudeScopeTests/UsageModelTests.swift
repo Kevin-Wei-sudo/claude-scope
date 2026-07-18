@@ -91,6 +91,47 @@ final class UsageModelTests: XCTestCase {
         XCTAssertEqual(reconciled.fiveHour?.resetsAtDate, date("2026-03-05T22:00:00Z"))
     }
 
+    func testDecodesUnknownBucketsIntoAdditionalBuckets() throws {
+        let json = """
+        {
+          "five_hour": {"utilization": 48.0, "resets_at": "2026-07-18T13:10:00Z"},
+          "seven_day": {"utilization": 55.0, "resets_at": "2026-07-19T11:00:00Z"},
+          "seven_day_opus": null,
+          "seven_day_fable": {"utilization": 82.0, "resets_at": "2026-07-19T11:00:00Z"},
+          "tangelo": {"utilization": 12.0, "resets_at": "2026-07-19T11:00:00Z"},
+          "nimbus_quill": null,
+          "spend": {"percent": 84, "severity": "warning"},
+          "limits": [],
+          "extra_usage": {"is_enabled": false, "utilization": 83.5}
+        }
+        """
+        let response = try JSONDecoder().decode(UsageResponse.self, from: Data(json.utf8))
+
+        XCTAssertEqual(Set(response.additionalBuckets.keys), ["seven_day_fable", "tangelo"])
+        XCTAssertEqual(response.additionalBuckets["seven_day_fable"]?.utilization, 82.0)
+        XCTAssertEqual(response.fiveHour?.utilization, 48.0)
+        XCTAssertEqual(response.extraUsage?.utilization, 83.5)
+    }
+
+    func testAdditionalBucketsSurviveReconciliation() throws {
+        let fable = UsageBucket(utilization: 82.0, resetsAt: "2026-07-19T11:00:00Z")
+        let response = UsageResponse(
+            fiveHour: nil, sevenDay: nil, sevenDayOpus: nil, sevenDaySonnet: nil,
+            extraUsage: nil, additionalBuckets: ["seven_day_fable": fable]
+        )
+
+        let reconciled = response.reconciled(with: nil, now: date("2026-07-18T00:00:00Z"))
+
+        XCTAssertEqual(reconciled.additionalBuckets["seven_day_fable"]?.utilization, 82.0)
+    }
+
+    func testBucketKeyDisplayNames() {
+        XCTAssertEqual(displayName(forBucketKey: "seven_day_fable"), "Fable 5")
+        XCTAssertEqual(displayName(forBucketKey: "seven_day_omelette"), "Claude Design")
+        XCTAssertEqual(displayName(forBucketKey: "seven_day_iguana_necktie"), "Iguana Necktie")
+        XCTAssertEqual(displayName(forBucketKey: "cinder_cove"), "Cinder Cove")
+    }
+
     private func usageResponse(fiveHour: UsageBucket? = nil) -> UsageResponse {
         UsageResponse(
             fiveHour: fiveHour,

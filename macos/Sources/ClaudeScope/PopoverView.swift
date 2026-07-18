@@ -103,7 +103,8 @@ struct PopoverView: View {
 
         let opus = service.usage?.sevenDayOpus
         let sonnet = service.usage?.sevenDaySonnet
-        if (opus?.utilization != nil) || (sonnet?.utilization != nil) {
+        let additionalBuckets = (service.usage?.additionalBuckets ?? [:]).sorted { $0.key < $1.key }
+        if (opus?.utilization != nil) || (sonnet?.utilization != nil) || !additionalBuckets.isEmpty {
             Divider()
             Text(localizedString("usage.per_model", fallback: "Per-Model (7 day)", language: appLanguage))
                 .font(.subheadline)
@@ -118,6 +119,12 @@ struct PopoverView: View {
                 UsageBucketRow(
                     label: localizedString("usage.model.sonnet_only", fallback: "Sonnet only", language: appLanguage),
                     bucket: sonnet
+                )
+            }
+            ForEach(additionalBuckets, id: \.key) { entry in
+                UsageBucketRow(
+                    label: displayName(forBucketKey: entry.key),
+                    bucket: entry.value
                 )
             }
         }
