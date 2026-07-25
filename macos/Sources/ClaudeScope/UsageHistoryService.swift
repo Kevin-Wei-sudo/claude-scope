@@ -13,17 +13,25 @@ class UsageHistoryService: ObservableObject {
     private static let retentionInterval: TimeInterval = 30 * 86400 // 30 days
     private static let flushInterval: TimeInterval = 300 // 5 minutes
 
-    private static var historyFileURL: URL {
+    private let historyFileURL: URL
+    private let legacyHistoryFileURL: URL
+
+    nonisolated static func defaultHistoryFileURL() -> URL {
         let dir = AppPaths.credentialsDirectoryURL
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir.appendingPathComponent("history.json")
     }
 
-    private static var legacyHistoryFileURL: URL {
+    nonisolated static func defaultLegacyHistoryFileURL() -> URL {
         AppPaths.legacyCredentialsDirectoryURL.appendingPathComponent("history.json")
     }
 
-    init() {
+    init(
+        historyFileURL: URL = UsageHistoryService.defaultHistoryFileURL(),
+        legacyHistoryFileURL: URL = UsageHistoryService.defaultLegacyHistoryFileURL()
+    ) {
+        self.historyFileURL = historyFileURL
+        self.legacyHistoryFileURL = legacyHistoryFileURL
         terminationObserver = NotificationCenter.default.addObserver(
             forName: NSApplication.willTerminateNotification,
             object: nil, queue: .main
@@ -45,10 +53,10 @@ class UsageHistoryService: ObservableObject {
 
     func loadHistory() {
         let url: URL
-        if FileManager.default.fileExists(atPath: Self.historyFileURL.path) {
-            url = Self.historyFileURL
+        if FileManager.default.fileExists(atPath: historyFileURL.path) {
+            url = historyFileURL
         } else {
-            url = Self.legacyHistoryFileURL
+            url = legacyHistoryFileURL
         }
         guard FileManager.default.fileExists(atPath: url.path) else { return }
 
@@ -82,11 +90,24 @@ class UsageHistoryService: ObservableObject {
         history.dataPoints = pruned(history.dataPoints)
 
         guard let data = try? JSONEncoder.historyEncoder.encode(history) else { return }
-        try? data.write(to: Self.historyFileURL, options: .atomic)
+        try? data.write(to: historyFileURL, options: .atomic)
 
         isDirty = false
         flushTimer?.cancel()
         flushTimer = nil
+    }
+
+    /// Drop every recorded point. Called when the signed-in account changes so
+    /// one account's chart never continues into another's. The legacy file is
+    /// removed too — otherwise `loadHistory` would fall back to it and
+    /// resurrect the previous account's data on next launch.
+    func clearHistory() {
+        history = UsageHistory()
+        isDirty = false
+        flushTimer?.cancel()
+        flushTimer = nil
+        try? FileManager.default.removeItem(at: historyFileURL)
+        try? FileManager.default.removeItem(at: legacyHistoryFileURL)
     }
 
     private func startFlushTimerIfNeeded() {

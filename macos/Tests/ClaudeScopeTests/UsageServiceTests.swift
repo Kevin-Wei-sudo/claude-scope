@@ -646,6 +646,62 @@ final class UsageServiceTests: XCTestCase {
         XCTAssertEqual(saved.refreshToken, "refresh-2")
     }
 
+    /// Reproduces the account-switch bug: one account's recorded points must not
+    /// remain behind for the next account to append to.
+    func testSignOutClearsUsageHistorySoTheNextAccountStartsClean() async throws {
+        let store = try makeStore()
+        try store.save(
+            StoredCredentials(
+                accessToken: "account-a",
+                refreshToken: "refresh-a",
+                expiresAt: Date().addingTimeInterval(3600),
+                scopes: UsageService.defaultOAuthScopes
+            )
+        )
+
+        let usageURL = URL(string: "https://example.com/api/oauth/usage")!
+        MockURLProtocol.handler = { request in
+            try Self.httpResponse(
+                url: usageURL,
+                statusCode: 200,
+                body: """
+                {
+                  "five_hour": { "utilization": 70, "resets_at": "2026-07-18T18:00:00Z" },
+                  "seven_day": { "utilization": 60, "resets_at": "2026-07-19T18:00:00Z" }
+                }
+                """
+            )
+        }
+
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let historyFile = directory.appendingPathComponent("history.json")
+
+        let historyService = UsageHistoryService(
+            historyFileURL: historyFile,
+            legacyHistoryFileURL: directory.appendingPathComponent("legacy.json")
+        )
+        let service = UsageService(
+            session: makeSession(),
+            usageEndpoint: usageURL,
+            userinfoEndpoint: URL(string: "https://example.com/api/oauth/userinfo")!,
+            tokenEndpoint: URL(string: "https://example.com/v1/oauth/token")!,
+            credentialsStore: store
+        )
+        service.historyService = historyService
+
+        await service.fetchUsage()
+        historyService.flushToDisk()
+        XCTAssertEqual(historyService.history.dataPoints.count, 1, "precondition: account A recorded a point")
+
+        service.signOut()
+
+        XCTAssertTrue(historyService.history.dataPoints.isEmpty)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: historyFile.path))
+    }
+
     private func makeStore() throws -> StoredCredentialsStore {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)

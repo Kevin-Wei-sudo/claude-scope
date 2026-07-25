@@ -238,6 +238,11 @@ class UsageService: ObservableObject {
             codeVerifier = nil
             oauthState = nil
 
+            // A completed sign-in may be a different account than the one whose
+            // data is on disk (sign-out is not the only way to get here), so
+            // start this account's record clean.
+            resetAccountScopedData()
+
             await fetchProfile()
             startPolling()
         } catch {
@@ -260,6 +265,16 @@ class UsageService: ObservableObject {
         refreshTask?.cancel()
         refreshTask = nil
         lastError = nil
+        resetAccountScopedData()
+    }
+
+    /// History and alert state belong to the account that produced them. The
+    /// API exposes no stable account identifier (userinfo is gone and the
+    /// tokens are opaque), so every credential change starts a fresh record
+    /// rather than risk blending two accounts into one chart.
+    private func resetAccountScopedData() {
+        historyService?.clearHistory()
+        notificationService?.resetAccountState()
         intelligenceService?.reset()
     }
 

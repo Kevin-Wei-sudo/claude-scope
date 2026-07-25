@@ -106,6 +106,16 @@ class NotificationService: ObservableObject {
         if enabled { requestPermission() }
     }
 
+    /// Forget the previous account's levels so a new sign-in does not fire
+    /// threshold or reset alerts derived from someone else's usage.
+    func resetAccountState() {
+        previousPct5h = nil
+        previousPct7d = nil
+        previousPctExtra = nil
+        lastSoonReminderWindow = nil
+        lastCompletionReminderWindow = nil
+    }
+
     func requestPermission() {
         guard Bundle.main.bundleIdentifier != nil else { return }
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
