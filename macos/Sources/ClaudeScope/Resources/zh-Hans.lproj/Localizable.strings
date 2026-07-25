@@ -34,6 +34,23 @@
 "usage.burn_rate.baseline" = "1× = 匀速用完 5 小时额度（20%/小时）";
 "usage.window_elapsed" = "窗口时间已过 %d%%";
 "announcement.details" = "查看详情";
+"button.attribution" = "用量去哪了…";
+"attribution.title" = "用量归因";
+"attribution.subtitle" = "最近 7 天，你的 Claude Code 用量花在了哪里";
+"attribution.by_project" = "按项目";
+"attribution.by_session" = "按会话（单个任务）";
+"attribution.by_model" = "按模型";
+"attribution.composition" = "消耗构成";
+"attribution.part.cache_read" = "上下文重复读取";
+"attribution.part.cache_write" = "上下文写入缓存";
+"attribution.part.output" = "输出内容";
+"attribution.part.input" = "输入";
+"attribution.entry.detail" = "%d 轮 · 平均上下文 %@";
+"attribution.insight.title" = "真正烧额度的是上下文";
+"attribution.insight.body" = "你的用量中 %d%% 来自每次请求携带的上下文（平均每轮 %@ tokens），只有 %d%% 是 Claude 实际写出的内容。及时清理长会话是最快的止损方式。";
+"attribution.footnote" = "基于本机 %d 轮 Claude Code 对话统计，子代理占 %d%%。不含网页与手机端用量；占比为相对权重，非实际计费金额。";
+"attribution.unavailable.sandboxed" = "App Store 版运行在沙盒中，无法读取 Claude Code 的本地会话记录。请使用官网下载版或 Homebrew 版查看归因。";
+"attribution.unavailable.no_data" = "最近 7 天在这台 Mac 上没有找到 Claude Code 会话记录。";
 "value.off" = "关闭";
 
 "settings.general" = "常规";

@@ -6,8 +6,10 @@ struct PopoverView: View {
     @ObservedObject var notificationService: NotificationService
     @ObservedObject var intelligenceService: UsageIntelligenceService
     @ObservedObject var announcementService: AnnouncementService
+    @ObservedObject var attributionService: AttributionService
     @ObservedObject var appUpdater: AppUpdater
     @AppStorage("setupComplete") private var setupComplete = false
+    @Environment(\.openWindow) private var openWindow
     @AppStorage(AppLanguage.storageKey) private var appLanguageRaw = AppLanguage.system.rawValue
 
     private var appLanguage: AppLanguage {
@@ -182,6 +184,7 @@ struct PopoverView: View {
 
         HStack(spacing: 12) {
             settingsButton
+            attributionButton
             Spacer()
             Button(localizedString("button.refresh", fallback: "Refresh", language: appLanguage)) {
                 Task { await service.fetchUsage() }
@@ -201,6 +204,16 @@ struct PopoverView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
+    }
+
+    private var attributionButton: some View {
+        Button(localizedString("button.attribution", fallback: "Where it went…", language: appLanguage)) {
+            attributionService.refreshIfStale()
+            openWindow(id: AttributionWindow.id)
+            NSApp.activate(ignoringOtherApps: true)
+        }
+        .buttonStyle(.borderless)
+        .font(.caption)
     }
 
     private var settingsButton: some View {

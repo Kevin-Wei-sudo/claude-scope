@@ -34,6 +34,23 @@
 "usage.burn_rate.baseline" = "1× = even pace for the 5-hour window (20%/hr)";
 "usage.window_elapsed" = "Time elapsed in this window: %d%%";
 "announcement.details" = "Details";
+"button.attribution" = "Where it went…";
+"attribution.title" = "Usage Attribution";
+"attribution.subtitle" = "Where your Claude Code usage went in the last 7 days";
+"attribution.by_project" = "By project";
+"attribution.by_session" = "By session (single task)";
+"attribution.by_model" = "By model";
+"attribution.composition" = "Cost composition";
+"attribution.part.cache_read" = "Context re-read";
+"attribution.part.cache_write" = "Context cached";
+"attribution.part.output" = "Output";
+"attribution.part.input" = "Input";
+"attribution.entry.detail" = "%d turns · avg context %@";
+"attribution.insight.title" = "Context is what costs you";
+"attribution.insight.body" = "%d%% of your usage is context carried into each request (average %@ tokens per turn); only %d%% is the text Claude actually wrote. Clearing long sessions is the fastest way to slow this down.";
+"attribution.footnote" = "Based on %d local Claude Code turns. Subagents account for %d%%. Web and mobile usage is not included, and shares are relative weights, not billed amounts.";
+"attribution.unavailable.sandboxed" = "The App Store build cannot read Claude Code's local transcripts. Use the direct download or Homebrew build for attribution.";
+"attribution.unavailable.no_data" = "No Claude Code sessions found on this Mac in the last 7 days.";
 "value.off" = "Off";
 
 "settings.general" = "General";
