@@ -13,6 +13,7 @@ struct ClaudeScopeApp: App {
     @StateObject private var notificationService = NotificationService()
     @StateObject private var intelligenceService = UsageIntelligenceService()
     @StateObject private var announcementService = AnnouncementService()
+    @StateObject private var attributionService = AttributionService()
     @StateObject private var appUpdater = AppUpdater()
     @AppStorage(AppLanguage.storageKey) private var appLanguageRaw = AppLanguage.system.rawValue
 
@@ -28,6 +29,7 @@ struct ClaudeScopeApp: App {
                 notificationService: notificationService,
                 intelligenceService: intelligenceService,
                 announcementService: announcementService,
+                attributionService: attributionService,
                 appUpdater: appUpdater
             )
             .environment(\.locale, appLanguage.locale)
@@ -41,8 +43,8 @@ struct ClaudeScopeApp: App {
                     if service.isAuthenticated && !UserDefaults.standard.bool(forKey: "setupComplete") {
                         UserDefaults.standard.set(true, forKey: "setupComplete")
                     }
-                    historyService.loadHistory()
                     service.historyService = historyService
+                    service.restoreAccountScope()
                     service.notificationService = notificationService
                     service.intelligenceService = intelligenceService
                     intelligenceService.refresh(usage: service.usage, history: historyService.history)
@@ -51,6 +53,15 @@ struct ClaudeScopeApp: App {
                 }
         }
         .menuBarExtraStyle(.window)
+
+        Window(
+            localizedString("attribution.title", fallback: "Usage Attribution", language: appLanguage),
+            id: AttributionWindow.id
+        ) {
+            AttributionView(service: attributionService)
+                .environment(\.locale, appLanguage.locale)
+        }
+        .windowResizability(.contentSize)
 
         Settings {
             SettingsWindowContent(

@@ -84,7 +84,7 @@ final class UsageServiceTests: XCTestCase {
         let service = UsageService(
             session: session,
             usageEndpoint: usageURL,
-            userinfoEndpoint: URL(string: "https://example.com/api/oauth/userinfo")!,
+            profileEndpoint: URL(string: "https://example.com/api/oauth/profile")!,
             tokenEndpoint: tokenURL,
             credentialsStore: store
         )
@@ -149,7 +149,7 @@ final class UsageServiceTests: XCTestCase {
         let service = UsageService(
             session: makeSession(),
             usageEndpoint: usageURL,
-            userinfoEndpoint: URL(string: "https://example.com/api/oauth/userinfo")!,
+            profileEndpoint: URL(string: "https://example.com/api/oauth/profile")!,
             tokenEndpoint: tokenURL,
             credentialsStore: store
         )
@@ -199,7 +199,7 @@ final class UsageServiceTests: XCTestCase {
         let service = UsageService(
             session: makeSession(),
             usageEndpoint: usageURL,
-            userinfoEndpoint: URL(string: "https://example.com/api/oauth/userinfo")!,
+            profileEndpoint: URL(string: "https://example.com/api/oauth/profile")!,
             tokenEndpoint: tokenURL,
             credentialsStore: store
         )
@@ -222,15 +222,15 @@ final class UsageServiceTests: XCTestCase {
             )
         )
 
-        let userinfoURL = URL(string: "https://example.com/api/oauth/userinfo")!
+        let profileURL = URL(string: "https://example.com/api/oauth/profile")!
         let tokenURL = URL(string: "https://example.com/v1/oauth/token")!
 
         MockURLProtocol.handler = { request in
             let authorization = request.value(forHTTPHeaderField: "Authorization") ?? ""
 
             switch (request.httpMethod, request.url?.path, authorization) {
-            case ("GET", "/api/oauth/userinfo", "Bearer old-access"):
-                return try Self.httpResponse(url: userinfoURL, statusCode: 401)
+            case ("GET", "/api/oauth/profile", "Bearer old-access"):
+                return try Self.httpResponse(url: profileURL, statusCode: 401)
             case ("POST", "/v1/oauth/token", _):
                 return try Self.httpResponse(
                     url: tokenURL,
@@ -244,8 +244,8 @@ final class UsageServiceTests: XCTestCase {
                     }
                     """
                 )
-            case ("GET", "/api/oauth/userinfo", "Bearer new-access"):
-                return try Self.httpResponse(url: userinfoURL, statusCode: 401)
+            case ("GET", "/api/oauth/profile", "Bearer new-access"):
+                return try Self.httpResponse(url: profileURL, statusCode: 401)
             default:
                 XCTFail("Unexpected request: \(request)")
                 return try Self.httpResponse(url: request.url!, statusCode: 500)
@@ -255,10 +255,9 @@ final class UsageServiceTests: XCTestCase {
         let service = UsageService(
             session: makeSession(),
             usageEndpoint: URL(string: "https://example.com/api/oauth/usage")!,
-            userinfoEndpoint: userinfoURL,
+            profileEndpoint: profileURL,
             tokenEndpoint: tokenURL,
-            credentialsStore: store,
-            localProfileLoader: { nil }
+            credentialsStore: store
         )
 
         await service.fetchProfile()
@@ -305,7 +304,7 @@ final class UsageServiceTests: XCTestCase {
         let service = UsageService(
             session: makeSession(),
             usageEndpoint: usageURL,
-            userinfoEndpoint: URL(string: "https://example.com/api/oauth/userinfo")!,
+            profileEndpoint: URL(string: "https://example.com/api/oauth/profile")!,
             tokenEndpoint: tokenURL,
             credentialsStore: store
         )
@@ -348,7 +347,7 @@ final class UsageServiceTests: XCTestCase {
         let service = UsageService(
             session: makeSession(),
             usageEndpoint: usageURL,
-            userinfoEndpoint: URL(string: "https://example.com/api/oauth/userinfo")!,
+            profileEndpoint: URL(string: "https://example.com/api/oauth/profile")!,
             tokenEndpoint: tokenURL,
             credentialsStore: store
         )
@@ -391,7 +390,7 @@ final class UsageServiceTests: XCTestCase {
         let service = UsageService(
             session: makeSession(),
             usageEndpoint: usageURL,
-            userinfoEndpoint: URL(string: "https://example.com/api/oauth/userinfo")!,
+            profileEndpoint: URL(string: "https://example.com/api/oauth/profile")!,
             tokenEndpoint: tokenURL,
             credentialsStore: store
         )
@@ -434,7 +433,7 @@ final class UsageServiceTests: XCTestCase {
         let service = UsageService(
             session: makeSession(),
             usageEndpoint: usageURL,
-            userinfoEndpoint: URL(string: "https://example.com/api/oauth/userinfo")!,
+            profileEndpoint: URL(string: "https://example.com/api/oauth/profile")!,
             tokenEndpoint: tokenURL,
             credentialsStore: store
         )
@@ -511,7 +510,7 @@ final class UsageServiceTests: XCTestCase {
         let service = UsageService(
             session: makeSession(),
             usageEndpoint: usageURL,
-            userinfoEndpoint: URL(string: "https://example.com/api/oauth/userinfo")!,
+            profileEndpoint: URL(string: "https://example.com/api/oauth/profile")!,
             tokenEndpoint: tokenURL,
             credentialsStore: store
         )
@@ -620,7 +619,7 @@ final class UsageServiceTests: XCTestCase {
         let service = UsageService(
             session: makeSession(),
             usageEndpoint: usageURL,
-            userinfoEndpoint: URL(string: "https://example.com/api/oauth/userinfo")!,
+            profileEndpoint: URL(string: "https://example.com/api/oauth/profile")!,
             tokenEndpoint: tokenURL,
             credentialsStore: store
         )
@@ -646,9 +645,9 @@ final class UsageServiceTests: XCTestCase {
         XCTAssertEqual(saved.refreshToken, "refresh-2")
     }
 
-    /// Reproduces the account-switch bug: one account's recorded points must not
-    /// remain behind for the next account to append to.
-    func testSignOutClearsUsageHistorySoTheNextAccountStartsClean() async throws {
+    /// Reproduces the account-switch bug at the service level: signing out
+    /// must detach the history so the next account starts from its own file.
+    func testSignOutDetachesHistorySoTheNextAccountStartsFromItsOwnFile() async throws {
         let store = try makeStore()
         try store.save(
             StoredCredentials(
@@ -660,7 +659,7 @@ final class UsageServiceTests: XCTestCase {
         )
 
         let usageURL = URL(string: "https://example.com/api/oauth/usage")!
-        MockURLProtocol.handler = { request in
+        MockURLProtocol.handler = { _ in
             try Self.httpResponse(
                 url: usageURL,
                 statusCode: 200,
@@ -677,29 +676,101 @@ final class UsageServiceTests: XCTestCase {
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }
-        let historyFile = directory.appendingPathComponent("history.json")
 
         let historyService = UsageHistoryService(
-            historyFileURL: historyFile,
+            directoryURL: directory,
             legacyHistoryFileURL: directory.appendingPathComponent("legacy.json")
         )
+        let accountA = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+        historyService.activate(accountKey: accountA)
+
         let service = UsageService(
             session: makeSession(),
             usageEndpoint: usageURL,
-            userinfoEndpoint: URL(string: "https://example.com/api/oauth/userinfo")!,
+            profileEndpoint: URL(string: "https://example.com/api/oauth/profile")!,
             tokenEndpoint: URL(string: "https://example.com/v1/oauth/token")!,
             credentialsStore: store
         )
         service.historyService = historyService
 
         await service.fetchUsage()
-        historyService.flushToDisk()
         XCTAssertEqual(historyService.history.dataPoints.count, 1, "precondition: account A recorded a point")
 
         service.signOut()
 
         XCTAssertTrue(historyService.history.dataPoints.isEmpty)
-        XCTAssertFalse(FileManager.default.fileExists(atPath: historyFile.path))
+        XCTAssertNil(service.accountKey)
+
+        // A second account records into its own file, untouched by account A.
+        historyService.activate(accountKey: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")
+        historyService.recordDataPoint(pct5h: 0.1, pct7d: 0.1)
+        XCTAssertEqual(historyService.history.dataPoints.count, 1)
+
+        historyService.activate(accountKey: accountA)
+        XCTAssertEqual(historyService.history.dataPoints.count, 1, "account A's point is still its own")
+        XCTAssertEqual(historyService.history.dataPoints.first?.pct5h ?? 0, 0.7, accuracy: 0.001)
+    }
+
+    /// Existing users upgrade with an unscoped history.json and no stored
+    /// account key; identifying the account must adopt that file, not orphan it.
+    func testLaunchAdoptsPreScopingHistoryOnceTheAccountIsIdentified() async throws {
+        let store = try makeStore()
+        try store.save(
+            StoredCredentials(
+                accessToken: "token",
+                refreshToken: "refresh",
+                expiresAt: Date().addingTimeInterval(3600),
+                scopes: UsageService.defaultOAuthScopes
+            )
+        )
+        UserDefaults.standard.removeObject(forKey: "lastAccountKey")
+
+        let uuid = "cccccccc-cccc-cccc-cccc-cccccccccccc"
+        let profileURL = URL(string: "https://example.com/api/oauth/profile")!
+        MockURLProtocol.handler = { _ in
+            try Self.httpResponse(
+                url: profileURL,
+                statusCode: 200,
+                body: #"{"account":{"uuid":"\#(uuid)","email":"me@example.com"}}"#
+            )
+        }
+
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let unscoped = directory.appendingPathComponent("history.json")
+        let json = """
+        {"dataPoints":[{"id":"\(UUID().uuidString)","timestamp":"\(ISO8601DateFormatter().string(from: Date()))","pct5h":0.42,"pct7d":0.5}]}
+        """
+        try Data(json.utf8).write(to: unscoped)
+
+        let historyService = UsageHistoryService(
+            directoryURL: directory,
+            legacyHistoryFileURL: directory.appendingPathComponent("legacy.json")
+        )
+        let service = UsageService(
+            session: makeSession(),
+            usageEndpoint: URL(string: "https://example.com/api/oauth/usage")!,
+            profileEndpoint: profileURL,
+            tokenEndpoint: URL(string: "https://example.com/v1/oauth/token")!,
+            credentialsStore: store
+        )
+        service.historyService = historyService
+
+        service.restoreAccountScope()          // launch: account not known yet
+        XCTAssertTrue(historyService.history.dataPoints.isEmpty)
+
+        await service.fetchProfile()           // account identified
+
+        XCTAssertEqual(service.accountKey, uuid)
+        XCTAssertEqual(service.accountEmail, "me@example.com")
+        XCTAssertEqual(historyService.history.dataPoints.count, 1, "old chart is adopted, not orphaned")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: unscoped.path))
+        XCTAssertTrue(FileManager.default.fileExists(
+            atPath: directory.appendingPathComponent("history-\(uuid).json").path))
+
+        UserDefaults.standard.removeObject(forKey: "lastAccountKey")
     }
 
     private func makeStore() throws -> StoredCredentialsStore {

@@ -10,6 +10,8 @@ class UsageService: ObservableObject {
     @Published var isAuthenticated = false
     @Published var isAwaitingCode = false
     @Published private(set) var accountEmail: String?
+    /// Stable account identifier from the profile endpoint; scopes stored history.
+    @Published private(set) var accountKey: String?
 
     var historyService: UsageHistoryService?
     var notificationService: NotificationService?
@@ -18,10 +20,9 @@ class UsageService: ObservableObject {
     private var timer: Timer?
     private let session: URLSession
     private let usageEndpoint: URL
-    private let userinfoEndpoint: URL
+    private let profileEndpoint: URL
     private let tokenEndpoint: URL
     private let credentialsStore: StoredCredentialsStore
-    private let localProfileLoader: @MainActor () -> String?
     private var currentInterval: TimeInterval
     private enum RefreshResult {
         case success
@@ -37,7 +38,7 @@ class UsageService: ObservableObject {
     nonisolated static let defaultOAuthScopes = ["user:profile", "user:inference"]
     nonisolated private static let authorizeEndpoint = URL(string: "https://claude.ai/oauth/authorize")!
     nonisolated private static let defaultUsageEndpoint = URL(string: "https://api.anthropic.com/api/oauth/usage")!
-    nonisolated private static let defaultUserinfoEndpoint = URL(string: "https://api.anthropic.com/api/oauth/userinfo")!
+    nonisolated private static let defaultProfileEndpoint = URL(string: "https://api.anthropic.com/api/oauth/profile")!
     nonisolated private static let defaultTokenEndpoint = URL(string: "https://platform.claude.com/v1/oauth/token")!
     nonisolated private static let defaultRedirectURI = "https://platform.claude.com/oauth/code/callback"
 
@@ -79,25 +80,33 @@ class UsageService: ObservableObject {
     init(
         session: URLSession = .shared,
         usageEndpoint: URL = UsageService.defaultUsageEndpoint,
-        userinfoEndpoint: URL = UsageService.defaultUserinfoEndpoint,
+        profileEndpoint: URL = UsageService.defaultProfileEndpoint,
         tokenEndpoint: URL = UsageService.defaultTokenEndpoint,
         redirectUri: String = UsageService.defaultRedirectURI,
-        credentialsStore: StoredCredentialsStore = StoredCredentialsStore(),
-        localProfileLoader: @MainActor @escaping () -> String? = UsageService.loadLocalProfile
+        credentialsStore: StoredCredentialsStore = StoredCredentialsStore()
     ) {
         self.session = session
         self.usageEndpoint = usageEndpoint
-        self.userinfoEndpoint = userinfoEndpoint
+        self.profileEndpoint = profileEndpoint
         self.tokenEndpoint = tokenEndpoint
         self.redirectUri = redirectUri
         self.credentialsStore = credentialsStore
-        self.localProfileLoader = localProfileLoader
         let stored = UserDefaults.standard.integer(forKey: "pollingMinutes")
         let minutes = Self.pollingOptions.contains(stored) ? stored : Self.defaultPollingMinutes
         self.pollingMinutes = minutes
         self.currentInterval = TimeInterval(minutes * 60)
         isAuthenticated = loadCredentials() != nil
+        if isAuthenticated {
+            accountKey = UserDefaults.standard.string(forKey: Self.accountKeyDefaultsKey)
+        }
     }
+
+    private static let accountKeyDefaultsKey = "lastAccountKey"
+
+    /// True while the pre-scoping history.json may still belong to the
+    /// account we are about to identify — i.e. we launched already signed
+    /// in. A fresh sign-in clears it, since that file is someone else's.
+    private var canAdoptUnscopedHistory = false
 
     // MARK: - Polling
 
@@ -108,6 +117,14 @@ class UsageService: ObservableObject {
             if accountEmail == nil { await fetchProfile() }
         }
         scheduleTimer()
+    }
+
+    /// Restore the last known account at launch so history loads before the
+    /// profile round-trip, and adopt any pre-scoping history file.
+    func restoreAccountScope() {
+        canAdoptUnscopedHistory = isAuthenticated
+        historyService?.activate(accountKey: accountKey, adoptUnscopedHistory: canAdoptUnscopedHistory)
+        if accountKey != nil { canAdoptUnscopedHistory = false }
     }
 
     private func scheduleTimer() {
@@ -238,10 +255,11 @@ class UsageService: ObservableObject {
             codeVerifier = nil
             oauthState = nil
 
-            // A completed sign-in may be a different account than the one whose
-            // data is on disk (sign-out is not the only way to get here), so
-            // start this account's record clean.
-            resetAccountScopedData()
+            // This may be a different account than the one on disk, and it is
+            // not identified until the profile call returns — pause recording
+            // until then so no point lands in the wrong account's file.
+            canAdoptUnscopedHistory = false
+            detachAccountScope()
 
             await fetchProfile()
             startPolling()
@@ -265,15 +283,16 @@ class UsageService: ObservableObject {
         refreshTask?.cancel()
         refreshTask = nil
         lastError = nil
-        resetAccountScopedData()
+        accountKey = nil
+        UserDefaults.standard.removeObject(forKey: Self.accountKeyDefaultsKey)
+        detachAccountScope()
     }
 
-    /// History and alert state belong to the account that produced them. The
-    /// API exposes no stable account identifier (userinfo is gone and the
-    /// tokens are opaque), so every credential change starts a fresh record
-    /// rather than risk blending two accounts into one chart.
-    private func resetAccountScopedData() {
-        historyService?.clearHistory()
+    /// Stop reading and writing any account's history, keeping the files so the
+    /// data is still there if that account signs back in. Derived alert and
+    /// prediction state is dropped because it describes the account we left.
+    private func detachAccountScope() {
+        historyService?.activate(accountKey: nil)
         notificationService?.resetAccountState()
         intelligenceService?.reset()
     }
@@ -352,13 +371,8 @@ class UsageService: ObservableObject {
     // MARK: - Profile
 
     func fetchProfile() async {
-        if let local = localProfileLoader() {
-            accountEmail = local
-            return
-        }
-
         guard let result = try? await sendAuthorizedRequest(
-            to: userinfoEndpoint,
+            to: profileEndpoint,
             expireSessionOnAuthFailure: false
         ) else {
             return
@@ -369,29 +383,34 @@ class UsageService: ObservableObject {
             return
         }
 
-        if let email = json["email"] as? String, !email.isEmpty {
+        let account = json["account"] as? [String: Any]
+        if let email = account?["email"] as? String, !email.isEmpty {
             accountEmail = email
-        } else if let name = json["name"] as? String, !name.isEmpty {
+        } else if let name = account?["display_name"] as? String, !name.isEmpty {
             accountEmail = name
+        }
+
+        if let uuid = account?["uuid"] as? String, !uuid.isEmpty {
+            applyAccountKey(uuid)
         }
     }
 
-    /// Try reading the email from Claude Code's local config as a fallback.
-    nonisolated private static func loadLocalProfile() -> String? {
-        let url = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent(".claude.json")
-        guard let data = try? Data(contentsOf: url),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let account = json["oauthAccount"] as? [String: Any] else {
-            return nil
+    /// Bind stored data to this account. Switching accounts loads that
+    /// account's own history instead of continuing the previous one's series.
+    private func applyAccountKey(_ key: String) {
+        let adopt = canAdoptUnscopedHistory
+        canAdoptUnscopedHistory = false
+
+        guard key != accountKey else {
+            historyService?.activate(accountKey: key, adoptUnscopedHistory: adopt)
+            return
         }
-        if let email = account["emailAddress"] as? String, !email.isEmpty {
-            return email
-        }
-        if let name = account["displayName"] as? String, !name.isEmpty {
-            return name
-        }
-        return nil
+
+        accountKey = key
+        UserDefaults.standard.set(key, forKey: Self.accountKeyDefaultsKey)
+        historyService?.activate(accountKey: key, adoptUnscopedHistory: adopt)
+        notificationService?.resetAccountState()
+        intelligenceService?.reset()
     }
 
     // MARK: - Credential storage
