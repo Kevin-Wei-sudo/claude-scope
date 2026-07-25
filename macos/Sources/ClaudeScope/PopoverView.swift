@@ -146,6 +146,10 @@ struct PopoverView: View {
 
         Divider()
         UsageChartView(historyService: historyService)
+        HStack {
+            Spacer()
+            attributionButton
+        }
 
         if let error = service.lastError {
             Divider()
@@ -184,7 +188,6 @@ struct PopoverView: View {
 
         HStack(spacing: 12) {
             settingsButton
-            attributionButton
             Spacer()
             Button(localizedString("button.refresh", fallback: "Refresh", language: appLanguage)) {
                 Task { await service.fetchUsage() }
