@@ -49,6 +49,15 @@ SLUG_KEYWORDS = ["limit", "usage", "quota", "throttl"]
 
 WINDOW = 140  # chars of context kept around each keyword hit
 
+# The help center stamps articles with a relative time ("Updated this week" ->
+# "Updated over a week ago") that changes on its own and is not policy news.
+RELATIVE_TIME = re.compile(
+    r"Updated\s+(?:(?:over|about|almost)\s+)?"
+    r"(?:a|an|\d+|this|last|few)?\s*"
+    r"(?:seconds?|minutes?|hours?|days?|weeks?|months?|years?)(?:\s+ago)?",
+    re.I,
+)
+
 
 def fetch_text(url: str) -> str:
     request = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (ClaudeScope monitor)"})
@@ -56,7 +65,8 @@ def fetch_text(url: str) -> str:
         raw = response.read().decode("utf-8", errors="replace")
     raw = re.sub(r"<(script|style)[^>]*>.*?</\1>", " ", raw, flags=re.S | re.I)
     raw = re.sub(r"<[^>]+>", " ", raw)
-    return re.sub(r"\s+", " ", html.unescape(raw)).strip()
+    text = re.sub(r"\s+", " ", html.unescape(raw)).strip()
+    return RELATIVE_TIME.sub("Updated <relative>", text)
 
 
 def keyword_windows(text: str) -> str:
