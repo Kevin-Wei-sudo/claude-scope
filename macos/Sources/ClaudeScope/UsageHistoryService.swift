@@ -17,6 +17,7 @@ class UsageHistoryService: ObservableObject {
 
     private static let retentionInterval: TimeInterval = 30 * 86400 // 30 days
     private static let flushInterval: TimeInterval = 300 // 5 minutes
+    private static let didMigrateUnscopedHistoryKey = "didMigrateUnscopedHistory"
 
     private let directoryURL: URL
     private let legacyHistoryFileURL: URL
@@ -91,15 +92,26 @@ class UsageHistoryService: ObservableObject {
         loadHistory()
     }
 
+    /// Runs at most once per install. Without this latch a stale unscoped file
+    /// — e.g. one an older build wrote while running alongside this one — could
+    /// later be adopted by a *different* account, recreating the mixed-history
+    /// bug this scoping exists to prevent.
     private func migrateUnscopedHistory(to key: String) {
+        let defaults = UserDefaults.standard
+        guard !defaults.bool(forKey: Self.didMigrateUnscopedHistoryKey) else { return }
+
         let destination = fileURL(for: key)
         let manager = FileManager.default
-        guard !manager.fileExists(atPath: destination.path) else { return }
+        guard !manager.fileExists(atPath: destination.path) else {
+            defaults.set(true, forKey: Self.didMigrateUnscopedHistoryKey)
+            return
+        }
 
         for source in [unscopedFileURL, legacyHistoryFileURL] where manager.fileExists(atPath: source.path) {
             try? manager.moveItem(at: source, to: destination)
-            return
+            break
         }
+        defaults.set(true, forKey: Self.didMigrateUnscopedHistoryKey)
     }
 
     // MARK: - Load

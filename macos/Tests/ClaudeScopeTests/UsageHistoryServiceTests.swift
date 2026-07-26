@@ -10,6 +10,7 @@ final class UsageHistoryServiceTests: XCTestCase {
     private let accountB = "22222222-2222-2222-2222-222222222222"
 
     override func setUpWithError() throws {
+        UserDefaults.standard.removeObject(forKey: "didMigrateUnscopedHistory")
         directory = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent("history-tests-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -17,6 +18,7 @@ final class UsageHistoryServiceTests: XCTestCase {
     }
 
     override func tearDownWithError() throws {
+        UserDefaults.standard.removeObject(forKey: "didMigrateUnscopedHistory")
         try? FileManager.default.removeItem(at: directory)
     }
 
@@ -78,6 +80,22 @@ final class UsageHistoryServiceTests: XCTestCase {
         let signIn = makeService()
         signIn.activate(accountKey: accountB, adoptUnscopedHistory: false)
         XCTAssertTrue(signIn.history.dataPoints.isEmpty)
+    }
+
+    /// A stale unscoped file left by an older build must never be adopted by a
+    /// second account after the one-time migration has already happened.
+    func testUnscopedHistoryIsAdoptedAtMostOnce() throws {
+        let first = makeService()
+        try Data(historyJSON(pct5h: 0.9).utf8).write(to: directory.appendingPathComponent("history.json"))
+        first.activate(accountKey: accountA, adoptUnscopedHistory: true)
+        XCTAssertEqual(first.history.dataPoints.count, 1)
+
+        // Another build writes an unscoped file again; account B must ignore it.
+        try Data(historyJSON(pct5h: 0.2).utf8).write(to: directory.appendingPathComponent("history.json"))
+        let second = makeService()
+        second.activate(accountKey: accountB, adoptUnscopedHistory: true)
+
+        XCTAssertTrue(second.history.dataPoints.isEmpty)
     }
 
     func testAdoptsLegacyDirectoryHistoryAtLaunch() throws {
