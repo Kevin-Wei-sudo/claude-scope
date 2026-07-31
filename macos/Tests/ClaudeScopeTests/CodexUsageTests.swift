@@ -84,6 +84,81 @@ final class CodexUsageTests: XCTestCase {
         XCTAssertFalse(usage.hasCredits)
     }
 
+    // MARK: - Session scanner
+
+    private func transcript(_ events: [String]) -> String {
+        events.joined(separator: "\n")
+    }
+
+    private func metaLine(cwd: String) -> String {
+        #"{"timestamp":"2026-07-30T10:00:00Z","type":"session_meta","payload":{"type":"session_meta","cwd":"\#(cwd)"}}"#
+    }
+
+    private func turnContextLine(model: String) -> String {
+        #"{"timestamp":"2026-07-30T10:00:01Z","type":"turn_context","payload":{"type":"turn_context","model":"\#(model)"}}"#
+    }
+
+    private func tokenLine(total: Int, timestamp: String = "2026-07-30T10:00:02Z") -> String {
+        #"{"timestamp":"\#(timestamp)","type":"event_msg","payload":{"type":"token_count","info":{"last_token_usage":{"total_tokens":\#(total)}}}}"#
+    }
+
+    func testScannerAttributesTokensToCurrentModelAndProject() {
+        let content = transcript([
+            metaLine(cwd: "/Users/me/monitor"),
+            turnContextLine(model: "gpt-5.6-sol"),
+            tokenLine(total: 1000),
+            turnContextLine(model: "codex-auto-review"),
+            tokenLine(total: 200),
+        ])
+        let cutoff = Date(timeIntervalSince1970: 0)
+
+        let turns = CodexSessionScanner.turnTokens(inTranscript: content, cutoff: cutoff)
+
+        XCTAssertEqual(turns.count, 2)
+        XCTAssertEqual(turns[0].model, "gpt-5.6-sol")
+        XCTAssertEqual(turns[0].project, "monitor")
+        XCTAssertEqual(turns[0].tokens, 1000)
+        XCTAssertEqual(turns[1].model, "codex-auto-review")
+        XCTAssertEqual(turns[1].tokens, 200)
+    }
+
+    func testScannerSkipsEventsBeforeCutoff() {
+        let content = transcript([
+            metaLine(cwd: "/p/x"),
+            turnContextLine(model: "m"),
+            tokenLine(total: 500, timestamp: "2026-07-01T00:00:00Z"),
+            tokenLine(total: 700, timestamp: "2026-07-30T00:00:00Z"),
+        ])
+        let cutoff = ISO8601DateFormatter().date(from: "2026-07-25T00:00:00Z")!
+
+        let turns = CodexSessionScanner.turnTokens(inTranscript: content, cutoff: cutoff)
+
+        XCTAssertEqual(turns.map(\.tokens), [700])
+    }
+
+    func testStatsRankModelsAndProjectsByTokens() {
+        let stats = CodexSessionScanner.stats(
+            fromTurnTokens: [
+                (model: "gpt-5.6-sol", project: "monitor", tokens: 900),
+                (model: "gpt-5.6-sol", project: "admin", tokens: 50),
+                (model: "codex-auto-review", project: "monitor", tokens: 50),
+            ],
+            windowDays: 7
+        )
+
+        XCTAssertEqual(stats.totalTokens, 1000)
+        XCTAssertEqual(stats.models.first?.key, "gpt-5.6-sol")
+        XCTAssertEqual(stats.models.first?.share ?? 0, 0.95, accuracy: 0.001)
+        XCTAssertEqual(stats.projects.first?.key, "monitor")
+        XCTAssertEqual(stats.projects.first?.share ?? 0, 0.95, accuracy: 0.001)
+        XCTAssertFalse(stats.isEmpty)
+    }
+
+    func testEmptyTurnsProduceEmptyStats() {
+        let stats = CodexSessionScanner.stats(fromTurnTokens: [], windowDays: 7)
+        XCTAssertTrue(stats.isEmpty)
+    }
+
     func testRejectsGarbage() {
         XCTAssertNil(CodexUsageParser.usage(fromAPIResponse: Data("nope".utf8)))
         XCTAssertNil(CodexUsageParser.usage(fromSessionRateLimits: [:]))

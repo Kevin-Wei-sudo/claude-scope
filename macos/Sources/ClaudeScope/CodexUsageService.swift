@@ -13,6 +13,7 @@ final class CodexUsageService: ObservableObject {
     @Published private(set) var usage: CodexUsage?
     @Published private(set) var isStale = false
     @Published private(set) var lastUpdated: Date?
+    @Published private(set) var localStats: CodexLocalStats?
 
     /// nil while Codex CLI is not installed (or unreadable in sandbox) —
     /// the UI hides the whole section then.
@@ -50,6 +51,8 @@ final class CodexUsageService: ObservableObject {
 
     func refresh() async {
         guard isAvailable else { return }
+
+        refreshLocalStatsIfStale()
 
         if let fresh = await fetchFromAPI() {
             usage = fresh
@@ -99,6 +102,45 @@ final class CodexUsageService: ObservableObject {
             return nil
         }
         return CodexUsageParser.usage(fromAPIResponse: data)
+    }
+
+    // MARK: - Local per-model / per-project stats
+
+    private static let statsRescanInterval: TimeInterval = 10 * 60
+    private var lastStatsScan: Date?
+
+    private func refreshLocalStatsIfStale(windowDays: Int = 7) {
+        if let lastStatsScan, Date().timeIntervalSince(lastStatsScan) < Self.statsRescanInterval, localStats != nil {
+            return
+        }
+        lastStatsScan = Date()
+
+        let directory = codexDirectory.appendingPathComponent("sessions")
+        let cutoff = Date().addingTimeInterval(-Double(windowDays) * 86400)
+
+        Task {
+            let stats = await Task.detached(priority: .utility) { () -> CodexLocalStats in
+                var turns = [CodexSessionScanner.TurnToken]()
+                if let walker = FileManager.default.enumerator(
+                    at: directory,
+                    includingPropertiesForKeys: [.contentModificationDateKey, .isRegularFileKey]
+                ) {
+                    for case let url as URL in walker where url.pathExtension == "jsonl" {
+                        let values = try? url.resourceValues(forKeys: [.contentModificationDateKey, .isRegularFileKey])
+                        guard values?.isRegularFile == true,
+                              let modified = values?.contentModificationDate,
+                              modified >= cutoff,
+                              let content = try? String(contentsOf: url, encoding: .utf8) else {
+                            continue
+                        }
+                        turns.append(contentsOf: CodexSessionScanner.turnTokens(inTranscript: content, cutoff: cutoff))
+                    }
+                }
+                return CodexSessionScanner.stats(fromTurnTokens: turns, windowDays: windowDays)
+            }.value
+
+            self.localStats = stats.isEmpty ? nil : stats
+        }
     }
 
     // MARK: - Local fallback

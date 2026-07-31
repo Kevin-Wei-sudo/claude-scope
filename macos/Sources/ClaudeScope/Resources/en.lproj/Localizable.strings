@@ -54,6 +54,7 @@
 "codex.window" = "%@ window";
 "codex.stale" = "Offline snapshot";
 "codex.credits" = "Credits balance: %@";
+"codex.local_stats" = "Last %d days on this Mac · %@ tokens";
 "value.off" = "Off";
 
 "settings.general" = "General";

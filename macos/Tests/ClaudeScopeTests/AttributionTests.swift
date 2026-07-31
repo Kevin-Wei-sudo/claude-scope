@@ -160,5 +160,6 @@ final class AttributionTests: XCTestCase {
         XCTAssertEqual(formatTokenCount(523_379), "523K")
         XCTAssertEqual(formatTokenCount(1_500_000), "1.5M")
         XCTAssertEqual(formatTokenCount(42), "42")
+        XCTAssertEqual(formatTokenCount(1_211_100_000), "1.2B")
     }
 }

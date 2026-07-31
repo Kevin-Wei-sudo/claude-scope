@@ -136,3 +136,106 @@ enum CodexUsageParser {
         }
     }
 }
+
+// MARK: - Local session stats
+
+struct CodexStatEntry: Identifiable, Equatable {
+    var id: String { key }
+    let key: String
+    let tokens: Int
+    let share: Double
+}
+
+/// Token totals from ~/.codex/sessions over a window — the per-model and
+/// per-project breakdown the usage API does not offer.
+struct CodexLocalStats: Equatable {
+    let windowDays: Int
+    let totalTokens: Int
+    let models: [CodexStatEntry]
+    let projects: [CodexStatEntry]
+
+    var isEmpty: Bool { totalTokens == 0 }
+}
+
+enum CodexSessionScanner {
+    /// One session transcript: `turn_context` lines carry the model and cwd in
+    /// effect, `token_count` lines carry that turn's usage.
+    static func turnTokens(inTranscript content: String, cutoff: Date) -> [(model: String, project: String, tokens: Int)] {
+        var model = "?"
+        var project = "?"
+        var result = [(String, String, Int)]()
+
+        for line in content.split(separator: "\n") {
+            guard let object = try? JSONSerialization.jsonObject(with: Data(line.utf8)) as? [String: Any] else {
+                continue
+            }
+            let payload = object["payload"] as? [String: Any] ?? [:]
+            let type = payload["type"] as? String ?? object["type"] as? String
+
+            switch type {
+            case "session_meta":
+                if let cwd = payload["cwd"] as? String {
+                    project = URL(fileURLWithPath: cwd).lastPathComponent
+                }
+            case "turn_context":
+                if let m = payload["model"] as? String { model = m }
+                if let cwd = payload["cwd"] as? String {
+                    project = URL(fileURLWithPath: cwd).lastPathComponent
+                }
+            case "token_count":
+                guard let timestampString = object["timestamp"] as? String,
+                      let timestamp = isoDate(from: timestampString),
+                      timestamp >= cutoff,
+                      let info = payload["info"] as? [String: Any],
+                      let last = info["last_token_usage"] as? [String: Any],
+                      let total = last["total_tokens"] as? Int, total > 0 else {
+                    break
+                }
+                result.append((model, project, total))
+            default:
+                break
+            }
+        }
+        return result
+    }
+
+    typealias TurnToken = (model: String, project: String, tokens: Int)
+
+    static func stats(
+        fromTurnTokens turns: [TurnToken],
+        windowDays: Int,
+        topCount: Int = 4
+    ) -> CodexLocalStats {
+        let total = turns.reduce(0) { $0 + $1.tokens }
+
+        func rank(_ key: (TurnToken) -> String) -> [CodexStatEntry] {
+            let grouped = Dictionary(grouping: turns, by: key)
+            let entries: [CodexStatEntry] = grouped.map { pair in
+                let tokens = pair.value.reduce(0) { $0 + $1.tokens }
+                let share = total > 0 ? Double(tokens) / Double(total) : 0
+                return CodexStatEntry(key: pair.key, tokens: tokens, share: share)
+            }
+            return entries
+                .sorted { $0.tokens > $1.tokens }
+                .filter { $0.share >= 0.005 }
+                .prefix(topCount)
+                .map { $0 }
+        }
+
+        return CodexLocalStats(
+            windowDays: windowDays,
+            totalTokens: total,
+            models: rank { $0.model },
+            projects: rank { $0.project }
+        )
+    }
+
+    private static func isoDate(from value: String) -> Date? {
+        let withFraction = ISO8601DateFormatter()
+        withFraction.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = withFraction.date(from: value) { return date }
+        let plain = ISO8601DateFormatter()
+        plain.formatOptions = [.withInternetDateTime]
+        return plain.date(from: value)
+    }
+}

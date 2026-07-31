@@ -85,7 +85,12 @@ struct PopoverView: View {
         }
 
         if providerTabRaw == "codex", let codex = codexService.usage {
-            CodexSection(usage: codex, isStale: codexService.isStale, language: appLanguage)
+            CodexSection(
+                usage: codex,
+                localStats: codexService.localStats,
+                isStale: codexService.isStale,
+                language: appLanguage
+            )
         } else {
             claudeUsageView
         }
@@ -773,6 +778,7 @@ private struct BurnRateRow: View {
 
 private struct CodexSection: View {
     let usage: CodexUsage
+    let localStats: CodexLocalStats?
     let isStale: Bool
     let language: AppLanguage
 
@@ -839,6 +845,58 @@ private struct CodexSection: View {
                 ))
                 .font(.caption2)
                 .foregroundStyle(.secondary)
+            }
+
+            if let stats = localStats {
+                Divider()
+                Text(localizedFormat(
+                    "codex.local_stats",
+                    fallback: "Last %d days on this Mac · %@ tokens",
+                    language: language,
+                    stats.windowDays,
+                    formatTokenCount(stats.totalTokens)
+                ))
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+
+                CodexStatGroup(
+                    title: localizedString("attribution.by_model", fallback: "By model", language: language),
+                    entries: stats.models
+                )
+                CodexStatGroup(
+                    title: localizedString("attribution.by_project", fallback: "By project", language: language),
+                    entries: stats.projects
+                )
+            }
+        }
+    }
+}
+
+private struct CodexStatGroup: View {
+    let title: String
+    let entries: [CodexStatEntry]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            ForEach(entries) { entry in
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack {
+                        Text(entry.key)
+                            .font(.caption)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                        Spacer()
+                        Text("\(Int(round(entry.share * 100)))% · \(formatTokenCount(entry.tokens))")
+                            .font(.caption2)
+                            .monospacedDigit()
+                            .foregroundStyle(.secondary)
+                    }
+                    ProgressView(value: entry.share, total: 1.0)
+                        .tint(.teal)
+                }
             }
         }
     }

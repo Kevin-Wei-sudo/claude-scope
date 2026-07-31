@@ -178,6 +178,8 @@ enum AttributionAggregator {
 
 func formatTokenCount(_ tokens: Int) -> String {
     switch tokens {
+    case 1_000_000_000...:
+        return String(format: "%.1fB", Double(tokens) / 1_000_000_000)
     case 1_000_000...:
         return String(format: "%.1fM", Double(tokens) / 1_000_000)
     case 1_000...:
