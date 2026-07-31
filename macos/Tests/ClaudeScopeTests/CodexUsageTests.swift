@@ -201,6 +201,44 @@ final class CodexUsageTests: XCTestCase {
         XCTAssertEqual(stats.daily.last?.day, utcCalendar.startOfDay(for: now))
     }
 
+    func testScratchpadWorktreeTokensFoldIntoHostProject() {
+        let now = ISO8601DateFormatter().date(from: "2026-07-31T00:00:00Z")!
+        let worktreeTurn = CodexTurn(
+            model: "m", project: "wt-trend", effort: "high",
+            timestamp: ISO8601DateFormatter().date(from: "2026-07-30T10:00:00Z")!,
+            tokens: 100,
+            scratchpadHost: "-Users-me-lexi-project-lanbow-admin-lanbow-admin"
+        )
+        let stats = CodexSessionScanner.stats(
+            fromTurns: [
+                turn(project: "lanbow-admin", tokens: 900),
+                worktreeTurn,
+            ],
+            windowDays: 7,
+            now: now,
+            calendar: utcCalendar
+        )
+
+        XCTAssertEqual(stats.projects.map(\.key), ["lanbow-admin"], "worktree merges into its host")
+        XCTAssertEqual(stats.projects.first?.tokens, 1000)
+    }
+
+    func testUnresolvableScratchpadKeepsWorktreeName() {
+        let now = ISO8601DateFormatter().date(from: "2026-07-31T00:00:00Z")!
+        let orphan = CodexTurn(
+            model: "m", project: "wt-x", effort: "high",
+            timestamp: ISO8601DateFormatter().date(from: "2026-07-30T10:00:00Z")!,
+            tokens: 100,
+            scratchpadHost: "-Users-me-somewhere-else"
+        )
+        let stats = CodexSessionScanner.stats(
+            fromTurns: [turn(project: "monitor", tokens: 900), orphan],
+            windowDays: 7, now: now, calendar: utcCalendar
+        )
+
+        XCTAssertEqual(Set(stats.projects.map(\.key)), ["monitor", "wt-x"])
+    }
+
     func testEmptyTurnsProduceEmptyStats() {
         let now = ISO8601DateFormatter().date(from: "2026-07-31T00:00:00Z")!
         let stats = CodexSessionScanner.stats(fromTurns: [], windowDays: 7, now: now, calendar: utcCalendar)

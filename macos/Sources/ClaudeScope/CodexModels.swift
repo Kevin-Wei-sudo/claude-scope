@@ -173,6 +173,9 @@ struct CodexTurn: Equatable {
     let effort: String
     let timestamp: Date
     let tokens: Int
+    /// Set when the cwd was inside a Claude session scratchpad; carries the
+    /// munged host-project segment for later re-attribution.
+    var scratchpadHost: String? = nil
 }
 
 enum CodexSessionScanner {
@@ -182,6 +185,7 @@ enum CodexSessionScanner {
         var model = "?"
         var project = "?"
         var effort = "?"
+        var scratchpadHost: String?
         var result = [CodexTurn]()
 
         for line in content.split(separator: "\n") {
@@ -195,12 +199,14 @@ enum CodexSessionScanner {
             case "session_meta":
                 if let cwd = payload["cwd"] as? String {
                     project = URL(fileURLWithPath: cwd).lastPathComponent
+                    scratchpadHost = ProjectNameResolver.scratchpadHostSegment(inPath: cwd)
                 }
             case "turn_context":
                 if let m = payload["model"] as? String { model = m }
                 if let e = payload["effort"] as? String { effort = e }
                 if let cwd = payload["cwd"] as? String {
                     project = URL(fileURLWithPath: cwd).lastPathComponent
+                    scratchpadHost = ProjectNameResolver.scratchpadHostSegment(inPath: cwd)
                 }
             case "token_count":
                 guard let timestampString = object["timestamp"] as? String,
@@ -213,7 +219,8 @@ enum CodexSessionScanner {
                 }
                 result.append(CodexTurn(
                     model: model, project: project, effort: effort,
-                    timestamp: timestamp, tokens: total
+                    timestamp: timestamp, tokens: total,
+                    scratchpadHost: scratchpadHost
                 ))
             default:
                 break
@@ -230,6 +237,17 @@ enum CodexSessionScanner {
         topCount: Int = 4
     ) -> CodexLocalStats {
         let total = turns.reduce(0) { $0 + $1.tokens }
+
+        // Fold scratchpad-worktree turns back into the project that spawned
+        // them; unresolvable ones keep the worktree name rather than vanish.
+        let knownProjects = Set(turns.filter { $0.scratchpadHost == nil }.map(\.project))
+        func effectiveProject(_ turn: CodexTurn) -> String {
+            guard let segment = turn.scratchpadHost,
+                  let host = ProjectNameResolver.hostProject(forMungedSegment: segment, knownProjects: knownProjects) else {
+                return turn.project
+            }
+            return host
+        }
 
         func rank(_ key: (CodexTurn) -> String) -> [CodexStatEntry] {
             let grouped = Dictionary(grouping: turns, by: key)
@@ -259,7 +277,7 @@ enum CodexSessionScanner {
             windowDays: windowDays,
             totalTokens: total,
             models: rank { $0.model },
-            projects: rank { $0.project },
+            projects: rank { effectiveProject($0) },
             // Turns before the effort field existed report "?" — not a lane.
             efforts: rank { $0.effort }.filter { $0.key != "?" },
             daily: daily

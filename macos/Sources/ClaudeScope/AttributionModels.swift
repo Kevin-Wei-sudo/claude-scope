@@ -40,6 +40,8 @@ struct AttributionTurn: Equatable {
     let model: String
     let isSidechain: Bool
     let usage: TurnUsage
+    /// Munged host segment when cwd was a Claude session scratchpad.
+    var scratchpadHost: String? = nil
 }
 
 struct AttributionEntry: Identifiable, Equatable {
@@ -94,6 +96,16 @@ enum AttributionAggregator {
         let total = turns.reduce(TurnUsage()) { $0 + $1.usage }
         let totalWeight = turns.reduce(0.0) { $0 + $1.usage.weight }
 
+        // Fold scratchpad-worktree turns back into their host project.
+        let knownProjects = Set(turns.filter { $0.scratchpadHost == nil }.map(\.project))
+        func effectiveProject(_ turn: AttributionTurn) -> String {
+            guard let segment = turn.scratchpadHost,
+                  let host = ProjectNameResolver.hostProject(forMungedSegment: segment, knownProjects: knownProjects) else {
+                return turn.project
+            }
+            return host
+        }
+
         func rank(
             by keyPath: (AttributionTurn) -> String,
             label: @escaping (String, [AttributionTurn]) -> String
@@ -125,9 +137,9 @@ enum AttributionAggregator {
             windowDays: windowDays,
             turns: turns.count,
             total: total,
-            projects: rank(by: { $0.project }, label: { key, _ in key }),
+            projects: rank(by: { effectiveProject($0) }, label: { key, _ in key }),
             sessions: rank(by: { $0.sessionID }, label: { key, group in
-                let project = group.first?.project ?? ""
+                let project = group.first.map(effectiveProject) ?? ""
                 return "\(project) · \(key.prefix(8))"
             }),
             models: rank(by: { $0.model }, label: { key, _ in key }),
@@ -162,7 +174,8 @@ enum AttributionAggregator {
             sessionID: object["sessionId"] as? String ?? "—",
             model: message["model"] as? String ?? "—",
             isSidechain: object["isSidechain"] as? Bool ?? false,
-            usage: turnUsage
+            usage: turnUsage,
+            scratchpadHost: cwd.flatMap { ProjectNameResolver.scratchpadHostSegment(inPath: $0) }
         )
     }
 

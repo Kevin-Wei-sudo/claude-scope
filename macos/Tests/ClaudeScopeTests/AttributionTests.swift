@@ -135,6 +135,26 @@ final class AttributionTests: XCTestCase {
         XCTAssertEqual(snapshot.projects.map(\.key), ["real"])
     }
 
+    func testScratchpadTurnsFoldIntoHostProject() {
+        let scratchpadTurn = AttributionTurn(
+            timestamp: now, project: "wt-trend", sessionID: "s9", model: "m",
+            isSidechain: false,
+            usage: TurnUsage(inputTokens: 0, cacheWriteTokens: 0, cacheReadTokens: 0, outputTokens: 100),
+            scratchpadHost: "-Users-me-lexi-project-lanbow-admin-lanbow-admin"
+        )
+        let snapshot = AttributionAggregator.snapshot(
+            turns: [turn(project: "lanbow-admin", session: "s1", output: 900), scratchpadTurn],
+            windowDays: 7,
+            now: now
+        )
+
+        XCTAssertEqual(snapshot.projects.map(\.key), ["lanbow-admin"])
+        XCTAssertTrue(
+            snapshot.sessions.contains { $0.key == "s9" && $0.label.hasPrefix("lanbow-admin") },
+            "session label uses the host project too"
+        )
+    }
+
     func testSubagentShareIsReported() {
         let snapshot = AttributionAggregator.snapshot(
             turns: [
