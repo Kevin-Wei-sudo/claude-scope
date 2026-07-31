@@ -10,6 +10,7 @@ struct PopoverView: View {
     @ObservedObject var codexService: CodexUsageService
     @ObservedObject var appUpdater: AppUpdater
     @AppStorage("setupComplete") private var setupComplete = false
+    @AppStorage("popoverProviderTab") private var providerTabRaw = "claude"
     @Environment(\.openWindow) private var openWindow
     @AppStorage(AppLanguage.storageKey) private var appLanguageRaw = AppLanguage.system.rawValue
 
@@ -74,6 +75,26 @@ struct PopoverView: View {
 
     @ViewBuilder
     private var usageView: some View {
+        if codexService.usage != nil {
+            Picker("", selection: $providerTabRaw) {
+                Text("Claude").tag("claude")
+                Text("Codex").tag("codex")
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+        }
+
+        if providerTabRaw == "codex", let codex = codexService.usage {
+            CodexSection(usage: codex, isStale: codexService.isStale, language: appLanguage)
+        } else {
+            claudeUsageView
+        }
+
+        sharedFooterView
+    }
+
+    @ViewBuilder
+    private var claudeUsageView: some View {
         if let announcement = announcementService.banner {
             AnnouncementBanner(
                 announcement: announcement,
@@ -145,18 +166,16 @@ struct PopoverView: View {
             ExtraUsageRow(extra: extra)
         }
 
-        if let codex = codexService.usage {
-            Divider()
-            CodexSection(usage: codex, isStale: codexService.isStale, language: appLanguage)
-        }
-
         Divider()
         UsageChartView(historyService: historyService)
         HStack {
             Spacer()
             attributionButton
         }
+    }
 
+    @ViewBuilder
+    private var sharedFooterView: some View {
         if let error = service.lastError {
             Divider()
             Label(error, systemImage: "exclamationmark.triangle")
