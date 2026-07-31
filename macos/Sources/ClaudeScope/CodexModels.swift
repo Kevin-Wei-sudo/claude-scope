@@ -146,24 +146,43 @@ struct CodexStatEntry: Identifiable, Equatable {
     let share: Double
 }
 
-/// Token totals from ~/.codex/sessions over a window — the per-model and
-/// per-project breakdown the usage API does not offer.
+struct CodexDailyEntry: Identifiable, Equatable {
+    var id: Date { day }
+    let day: Date
+    let tokens: Int
+}
+
+/// Token totals from ~/.codex/sessions over a window — the per-model,
+/// per-project, per-effort and per-day breakdown the usage API does not offer.
 struct CodexLocalStats: Equatable {
     let windowDays: Int
     let totalTokens: Int
     let models: [CodexStatEntry]
     let projects: [CodexStatEntry]
+    let efforts: [CodexStatEntry]
+    /// One entry per calendar day, oldest first, zero-filled — chart-ready.
+    let daily: [CodexDailyEntry]
 
     var isEmpty: Bool { totalTokens == 0 }
 }
 
+/// One assistant turn from a Codex session transcript.
+struct CodexTurn: Equatable {
+    let model: String
+    let project: String
+    let effort: String
+    let timestamp: Date
+    let tokens: Int
+}
+
 enum CodexSessionScanner {
-    /// One session transcript: `turn_context` lines carry the model and cwd in
-    /// effect, `token_count` lines carry that turn's usage.
-    static func turnTokens(inTranscript content: String, cutoff: Date) -> [(model: String, project: String, tokens: Int)] {
+    /// One session transcript: `turn_context` lines carry the model, cwd and
+    /// effort in effect, `token_count` lines carry that turn's usage.
+    static func turnTokens(inTranscript content: String, cutoff: Date) -> [CodexTurn] {
         var model = "?"
         var project = "?"
-        var result = [(String, String, Int)]()
+        var effort = "?"
+        var result = [CodexTurn]()
 
         for line in content.split(separator: "\n") {
             guard let object = try? JSONSerialization.jsonObject(with: Data(line.utf8)) as? [String: Any] else {
@@ -179,6 +198,7 @@ enum CodexSessionScanner {
                 }
             case "turn_context":
                 if let m = payload["model"] as? String { model = m }
+                if let e = payload["effort"] as? String { effort = e }
                 if let cwd = payload["cwd"] as? String {
                     project = URL(fileURLWithPath: cwd).lastPathComponent
                 }
@@ -191,7 +211,10 @@ enum CodexSessionScanner {
                       let total = last["total_tokens"] as? Int, total > 0 else {
                     break
                 }
-                result.append((model, project, total))
+                result.append(CodexTurn(
+                    model: model, project: project, effort: effort,
+                    timestamp: timestamp, tokens: total
+                ))
             default:
                 break
             }
@@ -199,16 +222,16 @@ enum CodexSessionScanner {
         return result
     }
 
-    typealias TurnToken = (model: String, project: String, tokens: Int)
-
     static func stats(
-        fromTurnTokens turns: [TurnToken],
+        fromTurns turns: [CodexTurn],
         windowDays: Int,
+        now: Date,
+        calendar: Calendar = .current,
         topCount: Int = 4
     ) -> CodexLocalStats {
         let total = turns.reduce(0) { $0 + $1.tokens }
 
-        func rank(_ key: (TurnToken) -> String) -> [CodexStatEntry] {
+        func rank(_ key: (CodexTurn) -> String) -> [CodexStatEntry] {
             let grouped = Dictionary(grouping: turns, by: key)
             let entries: [CodexStatEntry] = grouped.map { pair in
                 let tokens = pair.value.reduce(0) { $0 + $1.tokens }
@@ -222,11 +245,24 @@ enum CodexSessionScanner {
                 .map { $0 }
         }
 
+        var tokensByDay = [Date: Int]()
+        for turn in turns {
+            tokensByDay[calendar.startOfDay(for: turn.timestamp), default: 0] += turn.tokens
+        }
+        let today = calendar.startOfDay(for: now)
+        let daily: [CodexDailyEntry] = (0..<windowDays).reversed().compactMap { offset in
+            guard let day = calendar.date(byAdding: .day, value: -offset, to: today) else { return nil }
+            return CodexDailyEntry(day: day, tokens: tokensByDay[day] ?? 0)
+        }
+
         return CodexLocalStats(
             windowDays: windowDays,
             totalTokens: total,
             models: rank { $0.model },
-            projects: rank { $0.project }
+            projects: rank { $0.project },
+            // Turns before the effort field existed report "?" — not a lane.
+            efforts: rank { $0.effort }.filter { $0.key != "?" },
+            daily: daily
         )
     }
 

@@ -55,6 +55,8 @@
 "codex.stale" = "离线快照";
 "codex.credits" = "Credits 余额：%@";
 "codex.local_stats" = "最近 %d 天（本机）· 共 %@ tokens";
+"codex.by_effort" = "按推理档位";
+"codex.daily_trend" = "按天趋势";
 "value.off" = "关闭";
 
 "settings.general" = "常规";

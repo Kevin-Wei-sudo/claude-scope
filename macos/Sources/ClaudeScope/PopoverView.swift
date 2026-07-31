@@ -867,7 +867,47 @@ private struct CodexSection: View {
                     title: localizedString("attribution.by_project", fallback: "By project", language: language),
                     entries: stats.projects
                 )
+                if !stats.efforts.isEmpty {
+                    CodexStatGroup(
+                        title: localizedString("codex.by_effort", fallback: "By reasoning effort", language: language),
+                        entries: stats.efforts
+                    )
+                }
+                if stats.daily.contains(where: { $0.tokens > 0 }) {
+                    CodexDailyTrend(entries: stats.daily, language: language)
+                }
             }
+        }
+    }
+}
+
+private struct CodexDailyTrend: View {
+    let entries: [CodexDailyEntry]
+    let language: AppLanguage
+
+    private var peak: Int { max(entries.map(\.tokens).max() ?? 1, 1) }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(localizedString("codex.daily_trend", fallback: "Daily trend", language: language))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            HStack(alignment: .bottom, spacing: 4) {
+                ForEach(entries) { entry in
+                    VStack(spacing: 2) {
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(entry.tokens == peak ? Color.teal : Color.teal.opacity(0.45))
+                            .frame(height: max(3, 36 * CGFloat(entry.tokens) / CGFloat(peak)))
+                        Text(entry.day, format: Date.FormatStyle().weekday(.narrow).locale(language.locale))
+                            .font(.system(size: 8))
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .help("\(entry.day.formatted(date: .abbreviated, time: .omitted)) · \(formatTokenCount(entry.tokens))")
+                }
+            }
+            .frame(height: 48, alignment: .bottom)
         }
     }
 }

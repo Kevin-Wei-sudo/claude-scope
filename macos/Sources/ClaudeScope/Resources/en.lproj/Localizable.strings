@@ -55,6 +55,8 @@
 "codex.stale" = "Offline snapshot";
 "codex.credits" = "Credits balance: %@";
 "codex.local_stats" = "Last %d days on this Mac · %@ tokens";
+"codex.by_effort" = "By reasoning effort";
+"codex.daily_trend" = "Daily trend";
 "value.off" = "Off";
 
 "settings.general" = "General";

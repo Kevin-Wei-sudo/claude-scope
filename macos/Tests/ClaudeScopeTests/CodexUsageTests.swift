@@ -120,6 +120,16 @@ final class CodexUsageTests: XCTestCase {
         XCTAssertEqual(turns[0].tokens, 1000)
         XCTAssertEqual(turns[1].model, "codex-auto-review")
         XCTAssertEqual(turns[1].tokens, 200)
+        XCTAssertEqual(turns[0].effort, "?", "effort defaults to unknown when absent")
+    }
+
+    func testScannerTracksEffortFromTurnContext() {
+        let effortLine = #"{"timestamp":"2026-07-30T10:00:01Z","type":"turn_context","payload":{"type":"turn_context","model":"m","effort":"xhigh"}}"#
+        let content = transcript([metaLine(cwd: "/p/x"), effortLine, tokenLine(total: 10)])
+
+        let turns = CodexSessionScanner.turnTokens(inTranscript: content, cutoff: Date(timeIntervalSince1970: 0))
+
+        XCTAssertEqual(turns.first?.effort, "xhigh")
     }
 
     func testScannerSkipsEventsBeforeCutoff() {
@@ -136,27 +146,66 @@ final class CodexUsageTests: XCTestCase {
         XCTAssertEqual(turns.map(\.tokens), [700])
     }
 
-    func testStatsRankModelsAndProjectsByTokens() {
+    private var utcCalendar: Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        return calendar
+    }
+
+    private func turn(
+        model: String = "m", project: String = "p", effort: String = "medium",
+        timestamp: String = "2026-07-30T10:00:00Z", tokens: Int
+    ) -> CodexTurn {
+        CodexTurn(
+            model: model, project: project, effort: effort,
+            timestamp: ISO8601DateFormatter().date(from: timestamp)!, tokens: tokens
+        )
+    }
+
+    func testStatsRankModelsProjectsAndEfforts() {
+        let now = ISO8601DateFormatter().date(from: "2026-07-31T00:00:00Z")!
         let stats = CodexSessionScanner.stats(
-            fromTurnTokens: [
-                (model: "gpt-5.6-sol", project: "monitor", tokens: 900),
-                (model: "gpt-5.6-sol", project: "admin", tokens: 50),
-                (model: "codex-auto-review", project: "monitor", tokens: 50),
+            fromTurns: [
+                turn(model: "gpt-5.6-sol", project: "monitor", effort: "high", tokens: 900),
+                turn(model: "gpt-5.6-sol", project: "admin", effort: "medium", tokens: 50),
+                turn(model: "codex-auto-review", project: "monitor", effort: "?", tokens: 50),
             ],
-            windowDays: 7
+            windowDays: 7,
+            now: now,
+            calendar: utcCalendar
         )
 
         XCTAssertEqual(stats.totalTokens, 1000)
         XCTAssertEqual(stats.models.first?.key, "gpt-5.6-sol")
         XCTAssertEqual(stats.models.first?.share ?? 0, 0.95, accuracy: 0.001)
         XCTAssertEqual(stats.projects.first?.key, "monitor")
-        XCTAssertEqual(stats.projects.first?.share ?? 0, 0.95, accuracy: 0.001)
+        XCTAssertEqual(stats.efforts.map(\.key), ["high", "medium"], "unknown effort is not a lane")
         XCTAssertFalse(stats.isEmpty)
     }
 
+    func testDailyTrendIsZeroFilledOldestFirst() {
+        let now = ISO8601DateFormatter().date(from: "2026-07-31T12:00:00Z")!
+        let stats = CodexSessionScanner.stats(
+            fromTurns: [
+                turn(timestamp: "2026-07-31T01:00:00Z", tokens: 300),
+                turn(timestamp: "2026-07-31T09:00:00Z", tokens: 200),
+                turn(timestamp: "2026-07-28T08:00:00Z", tokens: 100),
+            ],
+            windowDays: 7,
+            now: now,
+            calendar: utcCalendar
+        )
+
+        XCTAssertEqual(stats.daily.count, 7)
+        XCTAssertEqual(stats.daily.map(\.tokens), [0, 0, 0, 100, 0, 0, 500])
+        XCTAssertEqual(stats.daily.last?.day, utcCalendar.startOfDay(for: now))
+    }
+
     func testEmptyTurnsProduceEmptyStats() {
-        let stats = CodexSessionScanner.stats(fromTurnTokens: [], windowDays: 7)
+        let now = ISO8601DateFormatter().date(from: "2026-07-31T00:00:00Z")!
+        let stats = CodexSessionScanner.stats(fromTurns: [], windowDays: 7, now: now, calendar: utcCalendar)
         XCTAssertTrue(stats.isEmpty)
+        XCTAssertEqual(stats.daily.count, 7)
     }
 
     func testRejectsGarbage() {

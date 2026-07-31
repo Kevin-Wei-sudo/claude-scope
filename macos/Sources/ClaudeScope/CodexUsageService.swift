@@ -120,7 +120,7 @@ final class CodexUsageService: ObservableObject {
 
         Task {
             let stats = await Task.detached(priority: .utility) { () -> CodexLocalStats in
-                var turns = [CodexSessionScanner.TurnToken]()
+                var turns = [CodexTurn]()
                 if let walker = FileManager.default.enumerator(
                     at: directory,
                     includingPropertiesForKeys: [.contentModificationDateKey, .isRegularFileKey]
@@ -136,7 +136,7 @@ final class CodexUsageService: ObservableObject {
                         turns.append(contentsOf: CodexSessionScanner.turnTokens(inTranscript: content, cutoff: cutoff))
                     }
                 }
-                return CodexSessionScanner.stats(fromTurnTokens: turns, windowDays: windowDays)
+                return CodexSessionScanner.stats(fromTurns: turns, windowDays: windowDays, now: Date())
             }.value
 
             self.localStats = stats.isEmpty ? nil : stats
