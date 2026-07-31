@@ -14,6 +14,7 @@ struct ClaudeScopeApp: App {
     @StateObject private var intelligenceService = UsageIntelligenceService()
     @StateObject private var announcementService = AnnouncementService()
     @StateObject private var attributionService = AttributionService()
+    @StateObject private var codexService = CodexUsageService()
     @StateObject private var appUpdater = AppUpdater()
     @AppStorage(AppLanguage.storageKey) private var appLanguageRaw = AppLanguage.system.rawValue
 
@@ -30,6 +31,7 @@ struct ClaudeScopeApp: App {
                 intelligenceService: intelligenceService,
                 announcementService: announcementService,
                 attributionService: attributionService,
+                codexService: codexService,
                 appUpdater: appUpdater
             )
             .environment(\.locale, appLanguage.locale)
@@ -50,6 +52,7 @@ struct ClaudeScopeApp: App {
                     intelligenceService.refresh(usage: service.usage, history: historyService.history)
                     service.startPolling()
                     announcementService.start()
+                    codexService.startPolling()
                 }
         }
         .menuBarExtraStyle(.window)

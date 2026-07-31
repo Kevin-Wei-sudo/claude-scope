@@ -51,6 +51,9 @@
 "attribution.footnote" = "基于本机 %d 轮 Claude Code 对话统计，子代理占 %d%%。不含网页与手机端用量；占比为相对权重，非实际计费金额。";
 "attribution.unavailable.sandboxed" = "App Store 版运行在沙盒中，无法读取 Claude Code 的本地会话记录。请使用官网下载版或 Homebrew 版查看归因。";
 "attribution.unavailable.no_data" = "最近 7 天在这台 Mac 上没有找到 Claude Code 会话记录。";
+"codex.window" = "%@ 窗口";
+"codex.stale" = "离线快照";
+"codex.credits" = "Credits 余额：%@";
 "value.off" = "关闭";
 
 "settings.general" = "常规";

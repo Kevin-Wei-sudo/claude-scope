@@ -51,6 +51,9 @@
 "attribution.footnote" = "Based on %d local Claude Code turns. Subagents account for %d%%. Web and mobile usage is not included, and shares are relative weights, not billed amounts.";
 "attribution.unavailable.sandboxed" = "The App Store build cannot read Claude Code's local transcripts. Use the direct download or Homebrew build for attribution.";
 "attribution.unavailable.no_data" = "No Claude Code sessions found on this Mac in the last 7 days.";
+"codex.window" = "%@ window";
+"codex.stale" = "Offline snapshot";
+"codex.credits" = "Credits balance: %@";
 "value.off" = "Off";
 
 "settings.general" = "General";

@@ -7,6 +7,7 @@ struct PopoverView: View {
     @ObservedObject var intelligenceService: UsageIntelligenceService
     @ObservedObject var announcementService: AnnouncementService
     @ObservedObject var attributionService: AttributionService
+    @ObservedObject var codexService: CodexUsageService
     @ObservedObject var appUpdater: AppUpdater
     @AppStorage("setupComplete") private var setupComplete = false
     @Environment(\.openWindow) private var openWindow
@@ -142,6 +143,11 @@ struct PopoverView: View {
         if let extra = service.usage?.extraUsage, extra.isEnabled {
             Divider()
             ExtraUsageRow(extra: extra)
+        }
+
+        if let codex = codexService.usage {
+            Divider()
+            CodexSection(usage: codex, isStale: codexService.isStale, language: appLanguage)
         }
 
         Divider()
@@ -742,6 +748,79 @@ private struct BurnRateRow: View {
             ))
             .font(.caption2)
             .foregroundStyle(.secondary)
+        }
+    }
+}
+
+private struct CodexSection: View {
+    let usage: CodexUsage
+    let isStale: Bool
+    let language: AppLanguage
+
+    private static let isoFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter
+    }()
+
+    private func bucket(for window: CodexUsage.Window) -> UsageBucket {
+        UsageBucket(
+            utilization: window.usedPercent,
+            resetsAt: window.resetAt.map { Self.isoFormatter.string(from: $0) }
+        )
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
+                Text("Codex")
+                    .font(.subheadline)
+                if let plan = usage.displayPlan {
+                    Text(plan)
+                        .font(.caption2)
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 1)
+                        .background(.quaternary, in: Capsule())
+                }
+                Spacer()
+                if isStale {
+                    Text(localizedString("codex.stale", fallback: "Offline snapshot", language: language))
+                        .font(.caption2)
+                        .foregroundStyle(.orange)
+                }
+            }
+
+            ForEach(usage.windows, id: \.label) { entry in
+                UsageBucketRow(
+                    label: localizedFormat(
+                        "codex.window",
+                        fallback: "%@ window",
+                        language: language,
+                        entry.label
+                    ),
+                    bucket: bucket(for: entry.window),
+                    windowDuration: entry.window.windowSeconds
+                )
+            }
+
+            ForEach(usage.scoped, id: \.name) { scoped in
+                UsageBucketRow(
+                    label: scoped.name,
+                    bucket: bucket(for: scoped.window),
+                    windowDuration: scoped.window.windowSeconds
+                )
+            }
+
+            if usage.hasCredits, let balance = usage.creditsBalance {
+                Text(localizedFormat(
+                    "codex.credits",
+                    fallback: "Credits balance: %@",
+                    language: language,
+                    balance
+                ))
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            }
         }
     }
 }
