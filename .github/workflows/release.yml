@@ -109,7 +109,7 @@ jobs:
           body_path: dist/release-notes.md
 
       - name: Generate Sparkle appcast
-        if: steps.configure_pages.outcome == 'success'
+        if: ${{ always() && steps.configure_pages.outcome != 'cancelled' }}
         env:
           SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
         run: |
@@ -127,6 +127,21 @@ jobs:
               --download-url-prefix "https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/" \
               --maximum-deltas 0 \
               -o dist/site/appcast.xml
+
+      - name: Publish appcast to main
+        # Pages has flipped between workflow and branch builds before; a copy
+        # committed to main serves correctly in either mode.
+        run: |
+          git fetch origin main
+          git checkout -B appcast-publish origin/main
+          cp dist/site/appcast.xml appcast.xml
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add appcast.xml
+          if git commit -m "appcast: ${GITHUB_REF_NAME} [skip ci]"; then
+            git push origin appcast-publish:main
+          fi
+          git checkout --detach "${GITHUB_REF_NAME}"
 
       - name: Upload appcast for GitHub Pages
         if: steps.configure_pages.outcome == 'success'
