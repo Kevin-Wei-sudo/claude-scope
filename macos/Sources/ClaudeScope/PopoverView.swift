@@ -867,12 +867,6 @@ private struct CodexSection: View {
                     title: localizedString("attribution.by_project", fallback: "By project", language: language),
                     entries: stats.projects
                 )
-                if !stats.efforts.isEmpty {
-                    CodexStatGroup(
-                        title: localizedString("codex.by_effort", fallback: "By reasoning effort", language: language),
-                        entries: stats.efforts
-                    )
-                }
                 if stats.daily.contains(where: { $0.tokens > 0 }) {
                     CodexDailyTrend(entries: stats.daily, language: language)
                 }
