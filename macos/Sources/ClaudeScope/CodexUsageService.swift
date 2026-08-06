@@ -16,6 +16,8 @@ final class CodexUsageService: ObservableObject {
     @Published private(set) var localStats: CodexLocalStats?
     /// Codex CLI is on API-key billing — no subscription windows exist.
     @Published private(set) var billsByAPIKey = false
+    /// Provider named in config.toml when billing via API key ("deepseek").
+    @Published private(set) var apiKeyProvider: String?
 
     /// nil while Codex CLI is not installed (or unreadable in sandbox) —
     /// the UI hides the whole section then.
@@ -34,15 +36,22 @@ final class CodexUsageService: ObservableObject {
 
     private let codexDirectory: URL
     private let session: URLSession
+    private let tokenCache: CodexTokenCache
     private var timer: AnyCancellable?
+
+    /// Codex CLI's public OAuth client — used only to refresh cached tokens.
+    private static let oauthClientID = "app_EMoamEEZ73f0CkXaXp7hrann"
+    private static let oauthTokenEndpoint = URL(string: "https://auth.openai.com/oauth/token")!
 
     init(
         codexDirectory: URL = FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent(".codex", isDirectory: true),
-        session: URLSession = .shared
+        session: URLSession = .shared,
+        tokenCache: CodexTokenCache = CodexTokenCache()
     ) {
         self.codexDirectory = codexDirectory
         self.session = session
+        self.tokenCache = tokenCache
     }
 
     func startPolling() {
@@ -62,16 +71,28 @@ final class CodexUsageService: ObservableObject {
 
         refreshLocalStatsIfStale()
 
-        // API-key billing has no subscription windows; stale ChatGPT-era
-        // percentages would be misleading, so drop them and say why instead.
-        if let authData = try? Data(contentsOf: codexDirectory.appendingPathComponent("auth.json")),
-           CodexUsageParser.isAPIKeyMode(authJSON: authData) {
+        let authData = try? Data(contentsOf: codexDirectory.appendingPathComponent("auth.json"))
+
+        // API-key billing (e.g. a DeepSeek key): the ChatGPT tokens are gone
+        // from auth.json, but the subscription still exists — poll it with the
+        // tokens we cached while ChatGPT mode was active.
+        if let authData, CodexUsageParser.isAPIKeyMode(authJSON: authData) {
             billsByAPIKey = true
-            usage = nil
-            isStale = false
+            apiKeyProvider = loadProviderName()
+
+            if let fresh = await fetchUsingCachedTokens() {
+                usage = fresh
+                isStale = false
+                lastUpdated = Date()
+            } else {
+                // No usable cached tokens: nothing subscription-shaped to show.
+                usage = nil
+                isStale = false
+            }
             return
         }
         billsByAPIKey = false
+        apiKeyProvider = nil
 
         if let fresh = await fetchFromAPI() {
             usage = fresh
@@ -92,16 +113,89 @@ final class CodexUsageService: ObservableObject {
 
     private func loadAuthTokens() -> CodexUsageParser.AuthTokens? {
         let url = codexDirectory.appendingPathComponent("auth.json")
-        guard let data = try? Data(contentsOf: url) else { return nil }
-        return CodexUsageParser.authTokens(fromAuthJSON: data)
+        guard let data = try? Data(contentsOf: url),
+              let tokens = CodexUsageParser.authTokens(fromAuthJSON: data) else {
+            return nil
+        }
+        // Keep a copy: Codex CLI discards these when switching to API-key mode.
+        cacheIfChanged(tokens, refreshToken: refreshTokenFromAuthJSON(data))
+        return tokens
+    }
+
+    private func refreshTokenFromAuthJSON(_ data: Data) -> String? {
+        guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let tokens = object["tokens"] as? [String: Any] else { return nil }
+        return tokens["refresh_token"] as? String
+    }
+
+    private func cacheIfChanged(_ tokens: CodexUsageParser.AuthTokens, refreshToken: String?) {
+        let existing = tokenCache.load()
+        guard existing?.accessToken != tokens.accessToken
+            || existing?.refreshToken != refreshToken else { return }
+        tokenCache.save(CachedCodexTokens(
+            accessToken: tokens.accessToken,
+            refreshToken: refreshToken ?? existing?.refreshToken,
+            accountID: tokens.accountID,
+            cachedAt: Date()
+        ))
+    }
+
+    private func loadProviderName() -> String? {
+        let url = codexDirectory.appendingPathComponent("config.toml")
+        guard let content = try? String(contentsOf: url, encoding: .utf8) else { return nil }
+        return CodexUsageParser.providerName(fromConfigTOML: content)
+    }
+
+    /// Subscription windows via cached ChatGPT tokens, refreshing them through
+    /// Codex CLI's own OAuth client when expired. Best effort: any permanent
+    /// failure just means the windows stay hidden until the next `codex login`.
+    private func fetchUsingCachedTokens() async -> CodexUsage? {
+        guard let cached = tokenCache.load() else { return nil }
+
+        if let usage = await fetchUsage(accessToken: cached.accessToken, accountID: cached.accountID) {
+            return usage
+        }
+        guard let refreshed = await refreshTokens(cached) else { return nil }
+        tokenCache.save(refreshed)
+        return await fetchUsage(accessToken: refreshed.accessToken, accountID: refreshed.accountID)
+    }
+
+    private func refreshTokens(_ cached: CachedCodexTokens) async -> CachedCodexTokens? {
+        guard let refreshToken = cached.refreshToken, !refreshToken.isEmpty else { return nil }
+
+        var request = URLRequest(url: Self.oauthTokenEndpoint)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try? JSONSerialization.data(withJSONObject: [
+            "client_id": Self.oauthClientID,
+            "grant_type": "refresh_token",
+            "refresh_token": refreshToken,
+            "scope": "openid profile email",
+        ])
+
+        guard let (data, response) = try? await session.data(for: request),
+              (response as? HTTPURLResponse)?.statusCode == 200,
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let accessToken = object["access_token"] as? String, !accessToken.isEmpty else {
+            return nil
+        }
+        return CachedCodexTokens(
+            accessToken: accessToken,
+            refreshToken: object["refresh_token"] as? String ?? refreshToken,
+            accountID: cached.accountID,
+            cachedAt: Date()
+        )
     }
 
     private func fetchFromAPI() async -> CodexUsage? {
         guard let auth = loadAuthTokens() else { return nil }
+        return await fetchUsage(accessToken: auth.accessToken, accountID: auth.accountID)
+    }
 
+    private func fetchUsage(accessToken: String, accountID: String?) async -> CodexUsage? {
         var request = URLRequest(url: Self.usageEndpoint)
-        request.setValue("Bearer \(auth.accessToken)", forHTTPHeaderField: "Authorization")
-        if let accountID = auth.accountID {
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        if let accountID {
             request.setValue(accountID, forHTTPHeaderField: "chatgpt-account-id")
         }
 

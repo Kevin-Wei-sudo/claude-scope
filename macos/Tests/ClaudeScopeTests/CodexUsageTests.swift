@@ -278,6 +278,45 @@ final class CodexUsageTests: XCTestCase {
         XCTAssertNil(CodexUsageParser.usage(fromSessionRateLimits: rateLimits))
     }
 
+    func testParsesProviderNameFromConfigTOML() {
+        let toml = """
+        model = "deepseek-v4-flash"
+        model_provider = "deepseek"
+        preferred_auth_method = "apikey"
+
+        [model_providers.deepseek]
+        name = "deepseek"
+        """
+        XCTAssertEqual(CodexUsageParser.providerName(fromConfigTOML: toml), "deepseek")
+        XCTAssertNil(CodexUsageParser.providerName(fromConfigTOML: "model = \"gpt\""))
+    }
+
+    func testTokenCacheRoundTripAndPermissions() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let cache = CodexTokenCache(directoryURL: directory)
+
+        XCTAssertNil(cache.load())
+
+        let tokens = CachedCodexTokens(
+            accessToken: "at", refreshToken: "rt", accountID: "acct",
+            cachedAt: Date(timeIntervalSince1970: 1_000_000)
+        )
+        cache.save(tokens)
+
+        let loaded = cache.load()
+        XCTAssertEqual(loaded?.accessToken, "at")
+        XCTAssertEqual(loaded?.refreshToken, "rt")
+
+        let path = directory.appendingPathComponent("codex-chatgpt-tokens.json").path
+        let permissions = try FileManager.default.attributesOfItem(atPath: path)[.posixPermissions] as? Int
+        XCTAssertEqual(permissions, 0o600, "another app's tokens must not be world-readable")
+
+        cache.clear()
+        XCTAssertNil(cache.load())
+    }
+
     func testRejectsGarbage() {
         XCTAssertNil(CodexUsageParser.usage(fromAPIResponse: Data("nope".utf8)))
         XCTAssertNil(CodexUsageParser.usage(fromSessionRateLimits: [:]))

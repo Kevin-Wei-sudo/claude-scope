@@ -89,6 +89,7 @@ struct PopoverView: View {
                 usage: codexService.usage,
                 localStats: codexService.localStats,
                 billsByAPIKey: codexService.billsByAPIKey,
+                apiKeyProvider: codexService.apiKeyProvider,
                 isStale: codexService.isStale,
                 language: appLanguage
             )
@@ -781,8 +782,13 @@ private struct CodexSection: View {
     let usage: CodexUsage?
     let localStats: CodexLocalStats?
     let billsByAPIKey: Bool
+    let apiKeyProvider: String?
     let isStale: Bool
     let language: AppLanguage
+
+    private var providerSuffix: String {
+        apiKeyProvider.map { "（\($0)）" } ?? ""
+    }
 
     private static let isoFormatter: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
@@ -815,6 +821,18 @@ private struct CodexSection: View {
                         .font(.caption2)
                         .foregroundStyle(.orange)
                 }
+            }
+
+            if billsByAPIKey, usage != nil {
+                Text(localizedFormat(
+                    "codex.apikey_note_with_windows",
+                    fallback: "Billing via API key%@ · windows below are your ChatGPT subscription",
+                    language: language,
+                    providerSuffix
+                ))
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
             }
 
             if let usage {
@@ -851,10 +869,11 @@ private struct CodexSection: View {
                 }
             } else if billsByAPIKey {
                 Label(
-                    localizedString(
-                        "codex.apikey_mode",
-                        fallback: "Codex CLI is signed in with an API key — pay-per-token billing has no plan windows to track.",
-                        language: language
+                    localizedFormat(
+                        "codex.apikey_note_no_windows",
+                        fallback: "Codex CLI bills via API key%@ — no subscription windows to track. Sign in with ChatGPT once and they will keep showing here even after switching back.",
+                        language: language,
+                        providerSuffix
                     ),
                     systemImage: "key"
                 )

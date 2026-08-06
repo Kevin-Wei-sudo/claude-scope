@@ -57,7 +57,8 @@
 "codex.local_stats" = "Last %d days on this Mac · %@ tokens";
 "codex.by_effort" = "By reasoning effort";
 "codex.daily_trend" = "Daily trend";
-"codex.apikey_mode" = "Codex CLI is signed in with an API key — pay-per-token billing has no plan windows to track.";
+"codex.apikey_note_no_windows" = "Codex CLI bills via API key%@ — no subscription windows to track. Sign in with ChatGPT once and they will keep showing here even after switching back.";
+"codex.apikey_note_with_windows" = "Billing via API key%@ · windows below are your ChatGPT subscription";
 "value.off" = "Off";
 
 "settings.general" = "General";

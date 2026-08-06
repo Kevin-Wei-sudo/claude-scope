@@ -71,6 +71,21 @@ enum CodexUsageParser {
         return AuthTokens(accessToken: accessToken, accountID: tokens["account_id"] as? String)
     }
 
+    /// Active model provider from ~/.codex/config.toml (e.g. "deepseek"),
+    /// so the API-key caption can say which key is billing.
+    static func providerName(fromConfigTOML content: String) -> String? {
+        for line in content.split(separator: "\n") {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            guard trimmed.hasPrefix("model_provider") else { continue }
+            let parts = trimmed.split(separator: "=", maxSplits: 1)
+            guard parts.count == 2 else { continue }
+            let value = parts[1].trimmingCharacters(in: .whitespaces)
+                .trimmingCharacters(in: CharacterSet(charactersIn: "\""))
+            return value.isEmpty ? nil : value
+        }
+        return nil
+    }
+
     /// True when Codex CLI is signed in with an API key (pay-per-token, no
     /// subscription rate windows).
     static func isAPIKeyMode(authJSON data: Data) -> Bool {
