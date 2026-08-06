@@ -57,6 +57,7 @@
 "codex.local_stats" = "Last %d days on this Mac · %@ tokens";
 "codex.by_effort" = "By reasoning effort";
 "codex.daily_trend" = "Daily trend";
+"codex.apikey_mode" = "Codex CLI is signed in with an API key — pay-per-token billing has no plan windows to track.";
 "value.off" = "Off";
 
 "settings.general" = "General";

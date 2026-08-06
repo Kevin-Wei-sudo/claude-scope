@@ -14,12 +14,20 @@ final class CodexUsageService: ObservableObject {
     @Published private(set) var isStale = false
     @Published private(set) var lastUpdated: Date?
     @Published private(set) var localStats: CodexLocalStats?
+    /// Codex CLI is on API-key billing — no subscription windows exist.
+    @Published private(set) var billsByAPIKey = false
 
     /// nil while Codex CLI is not installed (or unreadable in sandbox) —
     /// the UI hides the whole section then.
     var isAvailable: Bool {
         !AppEnvironment.isAppStoreBuild
             && FileManager.default.fileExists(atPath: codexDirectory.appendingPathComponent("auth.json").path)
+    }
+
+    /// The tab shows whenever anything is presentable: live windows, an
+    /// offline snapshot, local stats, or an API-key-mode explanation.
+    var hasDisplayableContent: Bool {
+        usage != nil || localStats != nil || billsByAPIKey
     }
 
     private static let usageEndpoint = URL(string: "https://chatgpt.com/backend-api/wham/usage")!
@@ -54,6 +62,17 @@ final class CodexUsageService: ObservableObject {
 
         refreshLocalStatsIfStale()
 
+        // API-key billing has no subscription windows; stale ChatGPT-era
+        // percentages would be misleading, so drop them and say why instead.
+        if let authData = try? Data(contentsOf: codexDirectory.appendingPathComponent("auth.json")),
+           CodexUsageParser.isAPIKeyMode(authJSON: authData) {
+            billsByAPIKey = true
+            usage = nil
+            isStale = false
+            return
+        }
+        billsByAPIKey = false
+
         if let fresh = await fetchFromAPI() {
             usage = fresh
             isStale = false
@@ -71,21 +90,10 @@ final class CodexUsageService: ObservableObject {
 
     // MARK: - API
 
-    private struct AuthTokens {
-        let accessToken: String
-        let accountID: String?
-    }
-
-    private func loadAuthTokens() -> AuthTokens? {
+    private func loadAuthTokens() -> CodexUsageParser.AuthTokens? {
         let url = codexDirectory.appendingPathComponent("auth.json")
-        guard let data = try? Data(contentsOf: url),
-              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let tokens = object["tokens"] as? [String: Any],
-              let accessToken = tokens["access_token"] as? String,
-              !accessToken.isEmpty else {
-            return nil
-        }
-        return AuthTokens(accessToken: accessToken, accountID: tokens["account_id"] as? String)
+        guard let data = try? Data(contentsOf: url) else { return nil }
+        return CodexUsageParser.authTokens(fromAuthJSON: data)
     }
 
     private func fetchFromAPI() async -> CodexUsage? {
@@ -156,29 +164,28 @@ final class CodexUsageService: ObservableObject {
             return nil
         }
 
-        var newest: (URL, Date)?
+        var candidates = [(URL, Date)]()
         for case let url as URL in walker where url.pathExtension == "jsonl" {
             let values = try? url.resourceValues(forKeys: [.contentModificationDateKey, .isRegularFileKey])
             guard values?.isRegularFile == true, let modified = values?.contentModificationDate else { continue }
-            if newest == nil || modified > newest!.1 {
-                newest = (url, modified)
-            }
-        }
-        guard let (url, _) = newest,
-              let contents = try? String(contentsOf: url, encoding: .utf8) else {
-            return nil
+            candidates.append((url, modified))
         }
 
-        for line in contents.split(separator: "\n").reversed() {
-            guard line.contains("rate_limits"),
-                  let object = try? JSONSerialization.jsonObject(with: Data(line.utf8)) as? [String: Any],
-                  let payload = object["payload"] as? [String: Any],
-                  payload["type"] as? String == "token_count",
-                  let rateLimits = payload["rate_limits"] as? [String: Any],
-                  let parsed = CodexUsageParser.usage(fromSessionRateLimits: rateLimits) else {
-                continue
+        // A session may end without any usable snapshot (e.g. all-null
+        // rate_limits), so look through the few most recent ones.
+        for (url, _) in candidates.sorted(by: { $0.1 > $1.1 }).prefix(5) {
+            guard let contents = try? String(contentsOf: url, encoding: .utf8) else { continue }
+            for line in contents.split(separator: "\n").reversed() {
+                guard line.contains("rate_limits"),
+                      let object = try? JSONSerialization.jsonObject(with: Data(line.utf8)) as? [String: Any],
+                      let payload = object["payload"] as? [String: Any],
+                      payload["type"] as? String == "token_count",
+                      let rateLimits = payload["rate_limits"] as? [String: Any],
+                      let parsed = CodexUsageParser.usage(fromSessionRateLimits: rateLimits) else {
+                    continue
+                }
+                return parsed
             }
-            return parsed
         }
         return nil
     }

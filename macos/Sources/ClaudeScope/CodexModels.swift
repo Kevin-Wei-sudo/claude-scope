@@ -54,6 +54,37 @@ struct CodexUsage: Equatable {
 }
 
 enum CodexUsageParser {
+    struct AuthTokens: Equatable {
+        let accessToken: String
+        let accountID: String?
+    }
+
+    /// ChatGPT-login tokens from ~/.codex/auth.json; nil in API-key mode,
+    /// where there are no plan windows to poll.
+    static func authTokens(fromAuthJSON data: Data) -> AuthTokens? {
+        guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let tokens = object["tokens"] as? [String: Any],
+              let accessToken = tokens["access_token"] as? String,
+              !accessToken.isEmpty else {
+            return nil
+        }
+        return AuthTokens(accessToken: accessToken, accountID: tokens["account_id"] as? String)
+    }
+
+    /// True when Codex CLI is signed in with an API key (pay-per-token, no
+    /// subscription rate windows).
+    static func isAPIKeyMode(authJSON data: Data) -> Bool {
+        guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return false
+        }
+        if let mode = object["auth_mode"] as? String, mode.lowercased() == "apikey" { return true }
+        if authTokens(fromAuthJSON: data) == nil,
+           let key = object["OPENAI_API_KEY"] as? String, !key.isEmpty {
+            return true
+        }
+        return false
+    }
+
     /// Parses the wham/usage response body.
     static func usage(fromAPIResponse data: Data) -> CodexUsage? {
         guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {

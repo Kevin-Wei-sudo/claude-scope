@@ -246,6 +246,38 @@ final class CodexUsageTests: XCTestCase {
         XCTAssertEqual(stats.daily.count, 7)
     }
 
+    // MARK: - auth.json modes
+
+    func testParsesChatGPTAuthTokens() {
+        let json = #"{"auth_mode":"chatgpt","tokens":{"access_token":"tok","account_id":"acct"}}"#
+
+        let tokens = CodexUsageParser.authTokens(fromAuthJSON: Data(json.utf8))
+
+        XCTAssertEqual(tokens?.accessToken, "tok")
+        XCTAssertEqual(tokens?.accountID, "acct")
+        XCTAssertFalse(CodexUsageParser.isAPIKeyMode(authJSON: Data(json.utf8)))
+    }
+
+    func testDetectsAPIKeyMode() {
+        // The shape Codex CLI writes after `codex login` with an API key.
+        let json = #"{"auth_mode":"apikey","OPENAI_API_KEY":"sk-xxx"}"#
+
+        XCTAssertNil(CodexUsageParser.authTokens(fromAuthJSON: Data(json.utf8)))
+        XCTAssertTrue(CodexUsageParser.isAPIKeyMode(authJSON: Data(json.utf8)))
+
+        // Older files may lack auth_mode but still carry only an API key.
+        let legacy = #"{"OPENAI_API_KEY":"sk-xxx","tokens":null}"#
+        XCTAssertTrue(CodexUsageParser.isAPIKeyMode(authJSON: Data(legacy.utf8)))
+    }
+
+    func testAllNullSessionRateLimitsParseToNothing() {
+        // API-key-mode sessions record rate_limits with every window null.
+        let rateLimits: [String: Any] = [
+            "limit_id": "codex", "primary": NSNull(), "secondary": NSNull(), "credits": NSNull(),
+        ]
+        XCTAssertNil(CodexUsageParser.usage(fromSessionRateLimits: rateLimits))
+    }
+
     func testRejectsGarbage() {
         XCTAssertNil(CodexUsageParser.usage(fromAPIResponse: Data("nope".utf8)))
         XCTAssertNil(CodexUsageParser.usage(fromSessionRateLimits: [:]))

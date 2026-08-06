@@ -75,7 +75,7 @@ struct PopoverView: View {
 
     @ViewBuilder
     private var usageView: some View {
-        if codexService.usage != nil {
+        if codexService.hasDisplayableContent {
             Picker("", selection: $providerTabRaw) {
                 Text("Claude").tag("claude")
                 Text("Codex").tag("codex")
@@ -84,10 +84,11 @@ struct PopoverView: View {
             .labelsHidden()
         }
 
-        if providerTabRaw == "codex", let codex = codexService.usage {
+        if providerTabRaw == "codex", codexService.hasDisplayableContent {
             CodexSection(
-                usage: codex,
+                usage: codexService.usage,
                 localStats: codexService.localStats,
+                billsByAPIKey: codexService.billsByAPIKey,
                 isStale: codexService.isStale,
                 language: appLanguage
             )
@@ -777,8 +778,9 @@ private struct BurnRateRow: View {
 }
 
 private struct CodexSection: View {
-    let usage: CodexUsage
+    let usage: CodexUsage?
     let localStats: CodexLocalStats?
+    let billsByAPIKey: Bool
     let isStale: Bool
     let language: AppLanguage
 
@@ -800,7 +802,7 @@ private struct CodexSection: View {
             HStack(spacing: 6) {
                 Text("Codex")
                     .font(.subheadline)
-                if let plan = usage.displayPlan {
+                if let plan = usage?.displayPlan {
                     Text(plan)
                         .font(.caption2)
                         .padding(.horizontal, 5)
@@ -815,36 +817,50 @@ private struct CodexSection: View {
                 }
             }
 
-            ForEach(usage.windows, id: \.label) { entry in
-                UsageBucketRow(
-                    label: localizedFormat(
-                        "codex.window",
-                        fallback: "%@ window",
+            if let usage {
+                ForEach(usage.windows, id: \.label) { entry in
+                    UsageBucketRow(
+                        label: localizedFormat(
+                            "codex.window",
+                            fallback: "%@ window",
+                            language: language,
+                            entry.label
+                        ),
+                        bucket: bucket(for: entry.window),
+                        windowDuration: entry.window.windowSeconds
+                    )
+                }
+
+                ForEach(usage.scoped, id: \.name) { scoped in
+                    UsageBucketRow(
+                        label: scoped.name,
+                        bucket: bucket(for: scoped.window),
+                        windowDuration: scoped.window.windowSeconds
+                    )
+                }
+
+                if usage.hasCredits, let balance = usage.creditsBalance {
+                    Text(localizedFormat(
+                        "codex.credits",
+                        fallback: "Credits balance: %@",
                         language: language,
-                        entry.label
+                        balance
+                    ))
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                }
+            } else if billsByAPIKey {
+                Label(
+                    localizedString(
+                        "codex.apikey_mode",
+                        fallback: "Codex CLI is signed in with an API key — pay-per-token billing has no plan windows to track.",
+                        language: language
                     ),
-                    bucket: bucket(for: entry.window),
-                    windowDuration: entry.window.windowSeconds
+                    systemImage: "key"
                 )
-            }
-
-            ForEach(usage.scoped, id: \.name) { scoped in
-                UsageBucketRow(
-                    label: scoped.name,
-                    bucket: bucket(for: scoped.window),
-                    windowDuration: scoped.window.windowSeconds
-                )
-            }
-
-            if usage.hasCredits, let balance = usage.creditsBalance {
-                Text(localizedFormat(
-                    "codex.credits",
-                    fallback: "Credits balance: %@",
-                    language: language,
-                    balance
-                ))
-                .font(.caption2)
+                .font(.caption)
                 .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
             }
 
             if let stats = localStats {

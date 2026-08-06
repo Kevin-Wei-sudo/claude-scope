@@ -57,6 +57,7 @@
 "codex.local_stats" = "最近 %d 天（本机）· 共 %@ tokens";
 "codex.by_effort" = "按推理档位";
 "codex.daily_trend" = "按天趋势";
+"codex.apikey_mode" = "Codex CLI 当前以 API key 登录，按 token 计费，没有可跟踪的订阅限额窗口。";
 "value.off" = "关闭";
 
 "settings.general" = "常规";
