@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 """
 Mock Anthropic usage API server for testing ClaudeScope.
@@ -6,17 +7,18 @@ Usage:
     python3 scripts/mock-server.py [--port 8080] [--scenario normal]
 
 Scenarios:
-    normal          - Moderate usage (5h: 25%, 7d: 45%)
-    high            - Near rate limit (5h: 85%, 7d: 92%)
-    maxed           - Fully rate limited (5h: 100%, 7d: 100%)
-    low             - Barely used (5h: 2%, 7d: 5%)
-    extra           - Extra usage enabled with credits
-    extra_high      - Extra usage near limit
-    per_model       - Per-model breakdown (Opus + Sonnet)
-    all_features    - Everything enabled: per-model, extra usage
-    unauthenticated - Returns 401 for all requests
-    rate_limited    - Returns 429 with Retry-After header
-    error           - Returns 500 server error
+    normal              - Moderate usage (5h: 25%, 7d: 45%)
+    high                - Near rate limit (5h: 85%, 7d: 92%)
+    maxed               - Fully rate limited (5h: 100%, 7d: 100%)
+    low                 - Barely used (5h: 2%, 7d: 5%)
+    extra               - Extra usage enabled with credits
+    extra_high          - Extra usage near limit
+    per_model           - Per-model breakdown (Opus + Sonnet)
+    all_features        - Everything enabled: per-model, extra usage
+    possible_usage_limit - Possible usage limit news (2026-08-09)
+    unauthenticated     - Returns 401 for all requests
+    rate_limited        - Returns 429 with Retry-After header
+    error               - Returns 500 server error
 
 To point the app at this server, modify UsageService.swift:
     private let usageEndpoint = URL(string: "http://localhost:8080/api/oauth/usage")!
@@ -145,18 +147,40 @@ SCENARIOS = {
         },
     },
     "all_features": {
-        "five_hour": {"utilization": 62.0, "resets_at": iso_future(hours=2)},
-        "seven_day": {"utilization": 78.0, "resets_at": iso_future(days=3)},
-        "seven_day_opus": {"utilization": 88.0, "resets_at": iso_future(days=4)},
-        "seven_day_sonnet": {"utilization": 25.0, "resets_at": iso_future(days=4)},
-        "seven_day_oauth_apps": None,
-        "seven_day_cowork": None,
+        "five_hour": {"utilization": 55.0, "resets_at": iso_future(hours=2)},
+        "seven_day": {"utilization": 75.0, "resets_at": iso_future(days=3)},
+        "seven_day_opus": {"utilization": 80.0, "resets_at": iso_future(days=4)},
+        "seven_day_sonnet": {"utilization": 30.0, "resets_at": iso_future(days=4)},
+        "seven_day_oauth_apps": {"utilization": 10.0, "resets_at": iso_future(days=4)},
+        "seven_day_cowork": {"utilization": 5.0, "resets_at": iso_future(days=4)},
         "iguana_necktie": None,
         "extra_usage": {
             "is_enabled": True,
             "monthly_limit": 50000,
-            "used_credits": 12750,
-            "utilization": 25.5,
+            "used_credits": 12500,
+            "utilization": 25.0,
+        },
+    },
+    # Issue #3: Possible usage-limit news (2026-08-09)
+    # Simulates the state where a possible usage limit has been announced/detected.
+    # The iguana_necktie field carries the possible-limit signal from the API.
+    "possible_usage_limit": {
+        "five_hour": {"utilization": 50.0, "resets_at": iso_future(hours=2)},
+        "seven_day": {"utilization": 65.0, "resets_at": iso_future(days=3)},
+        "seven_day_opus": None,
+        "seven_day_sonnet": None,
+        "seven_day_oauth_apps": None,
+        "seven_day_cowork": None,
+        "iguana_necktie": {
+            "possible_limit": True,
+            "message": "Possible usage limit may apply to your account.",
+            "effective_date": "2026-08-09",
+        },
+        "extra_usage": {
+            "is_enabled": False,
+            "monthly_limit": None,
+            "used_credits": None,
+            "utilization": None,
         },
     },
 }
@@ -165,95 +189,63 @@ SCENARIOS = {
 class MockHandler(BaseHTTPRequestHandler):
     scenario = "normal"
 
+    def log_message(self, fmt, *args):
+        print(f"[mock-server] {fmt % args}", file=sys.stderr)
+
+    def _send_json(self, status: int, body: object, extra_headers: dict = None):
+        data = json.dumps(body, indent=2).encode()
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(data)))
+        if extra_headers:
+            for k, v in extra_headers.items():
+                self.send_header(k, v)
+        self.end_headers()
+        self.wfile.write(data)
+
     def do_GET(self):
-        if self.path == "/api/oauth/usage":
-            self.handle_usage()
-        elif self.path.startswith("/scenario/"):
-            self.handle_set_scenario()
-        elif self.path == "/api/oauth/userinfo":
-            self.handle_userinfo()
+        if self.path.startswith("/api/oauth/usage"):
+            self._handle_usage()
         else:
-            self.send_error(404)
+            self._send_json(404, {"error": "not found"})
 
     def do_POST(self):
-        if self.path == "/v1/oauth/token":
-            self.handle_token()
+        if self.path.startswith("/v1/oauth/token"):
+            self._handle_token()
         else:
-            self.send_error(404)
+            self._send_json(404, {"error": "not found"})
 
-    def handle_set_scenario(self):
-        name = self.path.split("/scenario/", 1)[1]
-        all_scenarios = list(SCENARIOS.keys()) + ["unauthenticated", "rate_limited", "error"]
-        if name not in all_scenarios:
-            self.send_response(400)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps({"error": f"Unknown scenario: {name}", "available": all_scenarios}).encode())
+    def _handle_usage(self):
+        s = self.scenario
+
+        if s == "unauthenticated":
+            self._send_json(401, {"error": "unauthorized"})
             return
-        self.server.scenario = name
-        print(f"\n>>> Scenario switched to: {name}\n")
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self.end_headers()
-        self.wfile.write(json.dumps({"scenario": name}).encode())
-
-    def handle_userinfo(self):
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self.end_headers()
-        self.wfile.write(json.dumps({"email": "test@example.com", "name": "Test User"}).encode())
-
-    def handle_usage(self):
-        scenario = self.server.scenario
-
-        if scenario == "unauthenticated":
-            self.send_response(401)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps({"error": "unauthorized"}).encode())
-            return
-
-        if scenario == "rate_limited":
-            self.send_response(429)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Retry-After", "120")
-            self.end_headers()
-            self.wfile.write(json.dumps({"error": "rate_limited"}).encode())
-            return
-
-        if scenario == "error":
-            self.send_response(500)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(
-                json.dumps({"error": "internal_server_error"}).encode()
+        if s == "rate_limited":
+            self._send_json(
+                429,
+                {"error": "rate limited"},
+                extra_headers={"Retry-After": "60"},
             )
             return
+        if s == "error":
+            self._send_json(500, {"error": "internal server error"})
+            return
 
-        data = SCENARIOS.get(scenario, SCENARIOS["normal"])
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self.end_headers()
-        self.wfile.write(json.dumps(data, indent=2).encode())
+        data = SCENARIOS.get(s, SCENARIOS["normal"])
+        self._send_json(200, data)
 
-    def handle_token(self):
-        # Accept any code and return a fake token
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self.end_headers()
-        self.wfile.write(
-            json.dumps(
-                {
-                    "access_token": "mock-test-token-12345",
-                    "token_type": "bearer",
-                    "scope": "user:profile user:inference",
-                }
-            ).encode()
+    def _handle_token(self):
+        self._send_json(
+            200,
+            {
+                "access_token": "mock_access_token_12345",
+                "token_type": "Bearer",
+                "expires_in": 3600,
+                "refresh_token": "mock_refresh_token_67890",
+                "scope": "usage:read",
+            },
         )
-
-    def log_message(self, format, *args):
-        scenario = self.server.scenario
-        print(f"[{scenario}] {args[0]}")
 
 
 def main():
@@ -264,36 +256,22 @@ def main():
         default="normal",
         choices=list(SCENARIOS.keys())
         + ["unauthenticated", "rate_limited", "error"],
-        help="Response scenario",
+        help="Response scenario to simulate",
     )
     args = parser.parse_args()
 
-    server = HTTPServer(("127.0.0.1", args.port), MockHandler)
-    server.scenario = args.scenario
+    MockHandler.scenario = args.scenario
 
-    print(f"Mock server running on http://127.0.0.1:{args.port}")
-    print(f"Scenario: {args.scenario}")
-    print()
-    print("Available scenarios:")
-    for name in list(SCENARIOS.keys()) + ["unauthenticated", "rate_limited", "error"]:
-        print(f"  --scenario {name}")
-    print()
-    print("Switch scenario at runtime:")
-    print(f"  curl http://127.0.0.1:{args.port}/scenario/high")
-    print(f"  curl http://127.0.0.1:{args.port}/scenario/low")
-    print()
-    print("Test notification flow:")
-    print(f"  1. Point app at http://127.0.0.1:{args.port}")
-    print(f"  2. Start with: --scenario low")
-    print(f"  3. Wait for one poll, then: curl http://127.0.0.1:{args.port}/scenario/high")
-    print(f"  4. Next poll should trigger a notification")
-    print()
-
+    server = HTTPServer(("localhost", args.port), MockHandler)
+    print(
+        f"[mock-server] Listening on http://localhost:{args.port} "
+        f"(scenario: {args.scenario})",
+        file=sys.stderr,
+    )
     try:
         server.serve_forever()
     except KeyboardInterrupt:
-        print("\nShutting down.")
-        server.server_close()
+        print("\n[mock-server] Shutting down.", file=sys.stderr)
 
 
 if __name__ == "__main__":
