@@ -27,8 +27,18 @@ struct PopoverView: View {
                     onComplete: { setupComplete = true }
                 )
             } else {
-                Text(localizedString("popover.title", fallback: "ClaudeScope", language: appLanguage))
-                    .font(.headline)
+                HStack(alignment: .firstTextBaseline) {
+                    Text(localizedString("popover.title", fallback: "ClaudeScope", language: appLanguage))
+                        .font(.headline)
+                    Spacer()
+                    if let email = service.accountEmail {
+                        Text(email)
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                    }
+                }
                 if !service.isAuthenticated {
                     signInView
                 } else {
@@ -108,76 +118,81 @@ struct PopoverView: View {
                 language: appLanguage,
                 onDismiss: { announcementService.dismiss(announcement) }
             )
-            Divider()
         }
 
         if let snapshot = intelligenceService.snapshot {
             IntelligenceSection(snapshot: snapshot, language: appLanguage)
-            Divider()
         }
 
-        UsageBucketRow(
-            label: localizedString("usage.five_hour_window", fallback: "5-Hour Window", language: appLanguage),
-            bucket: service.usage?.fiveHour,
-            windowDuration: 5 * 60 * 60
-        )
+        SectionCard {
+            UsageBucketRow(
+                label: localizedString("usage.five_hour_window", fallback: "5-Hour Window", language: appLanguage),
+                bucket: service.usage?.fiveHour,
+                windowDuration: 5 * 60 * 60,
+                hero: true
+            )
 
-        if let burnRate = currentBurnRate(points: historyService.history.dataPoints, now: Date()) {
-            BurnRateRow(burnRate: burnRate)
+            if let burnRate = currentBurnRate(points: historyService.history.dataPoints, now: Date()) {
+                BurnRateRow(burnRate: burnRate)
+            }
+
+            UsageBucketRow(
+                label: localizedString("usage.seven_day_window", fallback: "7-Day Window", language: appLanguage),
+                bucket: service.usage?.sevenDay,
+                windowDuration: 7 * 24 * 60 * 60
+            )
         }
-
-        UsageBucketRow(
-            label: localizedString("usage.seven_day_window", fallback: "7-Day Window", language: appLanguage),
-            bucket: service.usage?.sevenDay,
-            windowDuration: 7 * 24 * 60 * 60
-        )
 
         let opus = service.usage?.sevenDayOpus
         let sonnet = service.usage?.sevenDaySonnet
         let scopedBuckets = service.usage?.scopedWeeklyBuckets ?? []
         let additionalBuckets = (service.usage?.additionalBuckets ?? [:]).sorted { $0.key < $1.key }
         if (opus?.utilization != nil) || (sonnet?.utilization != nil) || !additionalBuckets.isEmpty || !scopedBuckets.isEmpty {
-            Divider()
-            Text(localizedString("usage.per_model", fallback: "Per-Model (7 day)", language: appLanguage))
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            ForEach(scopedBuckets, id: \.label) { entry in
-                UsageBucketRow(
-                    label: entry.label,
-                    bucket: entry.bucket,
-                    windowDuration: 7 * 24 * 60 * 60
+            SectionCard {
+                SectionHeader(
+                    symbol: "cpu",
+                    title: localizedString("usage.per_model", fallback: "Per-Model (7 day)", language: appLanguage)
                 )
-            }
-            if let opus, opus.utilization != nil {
-                UsageBucketRow(
-                    label: localizedString("usage.model.opus_only", fallback: "Opus only", language: appLanguage),
-                    bucket: opus
-                )
-            }
-            if let sonnet, sonnet.utilization != nil {
-                UsageBucketRow(
-                    label: localizedString("usage.model.sonnet_only", fallback: "Sonnet only", language: appLanguage),
-                    bucket: sonnet
-                )
-            }
-            ForEach(additionalBuckets, id: \.key) { entry in
-                UsageBucketRow(
-                    label: displayName(forBucketKey: entry.key),
-                    bucket: entry.value
-                )
+                ForEach(scopedBuckets, id: \.label) { entry in
+                    UsageBucketRow(
+                        label: entry.label,
+                        bucket: entry.bucket,
+                        windowDuration: 7 * 24 * 60 * 60
+                    )
+                }
+                if let opus, opus.utilization != nil {
+                    UsageBucketRow(
+                        label: localizedString("usage.model.opus_only", fallback: "Opus only", language: appLanguage),
+                        bucket: opus
+                    )
+                }
+                if let sonnet, sonnet.utilization != nil {
+                    UsageBucketRow(
+                        label: localizedString("usage.model.sonnet_only", fallback: "Sonnet only", language: appLanguage),
+                        bucket: sonnet
+                    )
+                }
+                ForEach(additionalBuckets, id: \.key) { entry in
+                    UsageBucketRow(
+                        label: displayName(forBucketKey: entry.key),
+                        bucket: entry.value
+                    )
+                }
             }
         }
 
         if let extra = service.usage?.extraUsage, extra.isEnabled {
-            Divider()
-            ExtraUsageRow(extra: extra)
+            SectionCard {
+                ExtraUsageRow(extra: extra)
+            }
         }
 
-        Divider()
-        UsageChartView(historyService: historyService)
-        HStack {
-            Spacer()
-            attributionButton
+        SectionCard {
+            UsageChartView(historyService: historyService)
+            HStack {
+                Spacer()
+                attributionButton
+            }
         }
     }
 
@@ -653,10 +668,11 @@ private struct CodeEntryView: View {
     }
 }
 
-private struct UsageBucketRow: View {
+struct UsageBucketRow: View {
     let label: String
     let bucket: UsageBucket?
     var windowDuration: TimeInterval? = nil
+    var hero: Bool = false
     @AppStorage(AppLanguage.storageKey) private var appLanguageRaw = AppLanguage.system.rawValue
 
     private var appLanguage: AppLanguage {
@@ -668,60 +684,83 @@ private struct UsageBucketRow: View {
         return windowElapsedFraction(resetDate: bucket?.resetsAtDate, windowDuration: windowDuration)
     }
 
+    private var fraction: Double { (bucket?.utilization ?? 0) / 100.0 }
+
+    private var resetsText: String? {
+        bucket?.resetsAtDate.map { resetDate in
+            localizedFormat(
+                "usage.resets",
+                fallback: "Resets %@",
+                language: appLanguage,
+                resetDate.formatted(
+                    .relative(presentation: .named)
+                        .locale(appLanguage.locale)
+                )
+            )
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Text(label)
-                    .font(.subheadline)
-                Spacer()
-                Text(percentageText)
-                    .font(.subheadline)
-                    .monospacedDigit()
-            }
-            ProgressView(value: (bucket?.utilization ?? 0) / 100.0, total: 1.0)
-                .tint(colorForPct((bucket?.utilization ?? 0) / 100.0))
-                .padding(.top, timeElapsedFraction == nil ? 0 : 8)
-                .overlay {
-                    if let fraction = timeElapsedFraction {
-                        GeometryReader { geo in
-                            VStack(spacing: 0) {
-                                Image(systemName: "arrowtriangle.down.fill")
-                                    .font(.system(size: 7, weight: .bold))
-                                RoundedRectangle(cornerRadius: 1)
-                                    .frame(width: 2, height: 9)
-                            }
-                            .foregroundStyle(Color.primary.opacity(0.8))
-                            .position(
-                                x: min(max(geo.size.width * fraction, 4), geo.size.width - 4),
-                                // marker is 16pt tall; anchor its bottom to the bar's bottom edge
-                                y: geo.size.height - 8
-                            )
+            if hero {
+                HStack(alignment: .firstTextBaseline) {
+                    Text(percentageText)
+                        .font(.system(size: 32, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                        .foregroundStyle(Theme.utilization(fraction))
+                        .contentTransition(.numericText())
+                    Spacer()
+                    VStack(alignment: .trailing, spacing: 1) {
+                        Text(label)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        if let resetsText {
+                            Text(resetsText)
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
                         }
-                        .help(
-                            localizedFormat(
-                                "usage.window_elapsed",
-                                fallback: "Time elapsed in this window: %d%%",
-                                language: appLanguage,
-                                Int(round(fraction * 100))
-                            )
-                        )
                     }
                 }
-            if let resetDate = bucket?.resetsAtDate {
-                Text(
-                    localizedFormat(
-                        "usage.resets",
-                        fallback: "Resets %@",
-                        language: appLanguage,
-                        resetDate.formatted(
-                            .relative(presentation: .named)
-                                .locale(appLanguage.locale)
-                        )
-                    )
-                )
+            } else {
+                HStack {
+                    Text(label)
+                        .font(.subheadline)
+                    Spacer()
+                    Text(percentageText)
+                        .font(.subheadline.weight(.medium))
+                        .monospacedDigit()
+                        .contentTransition(.numericText())
+                }
+            }
+
+            barView
+
+            if !hero, let resetsText {
+                Text(resetsText)
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
+        }
+    }
+
+    @ViewBuilder
+    private var barView: some View {
+        let bar = UsageBarView(
+            fraction: fraction,
+            markerFraction: timeElapsedFraction,
+            height: hero ? 10 : 7
+        )
+        if let fraction = timeElapsedFraction {
+            bar.help(
+                localizedFormat(
+                    "usage.window_elapsed",
+                    fallback: "Time elapsed in this window: %d%%",
+                    language: appLanguage,
+                    Int(round(fraction * 100))
+                )
+            )
+        } else {
+            bar
         }
     }
 
@@ -731,7 +770,7 @@ private struct UsageBucketRow: View {
     }
 }
 
-private struct BurnRateRow: View {
+struct BurnRateRow: View {
     let burnRate: BurnRateSnapshot
     @AppStorage(AppLanguage.storageKey) private var appLanguageRaw = AppLanguage.system.rawValue
 
@@ -742,7 +781,7 @@ private struct BurnRateRow: View {
     private var tint: Color {
         switch burnRate.multiplier {
         case ..<1.0: return .green
-        case 1.0..<2.0: return .yellow
+        case 1.0..<2.0: return .orange
         default: return .red
         }
     }
@@ -926,7 +965,7 @@ private struct CodexDailyTrend: View {
                 ForEach(entries) { entry in
                     VStack(spacing: 2) {
                         RoundedRectangle(cornerRadius: 2)
-                            .fill(entry.tokens == peak ? Color.teal : Color.teal.opacity(0.45))
+                            .fill(entry.tokens == peak ? Theme.codex : Theme.codex.opacity(0.45))
                             .frame(height: max(3, 36 * CGFloat(entry.tokens) / CGFloat(peak)))
                         Text(entry.day, format: Date.FormatStyle().weekday(.narrow).locale(language.locale))
                             .font(.system(size: 8))
@@ -963,8 +1002,7 @@ private struct CodexStatGroup: View {
                             .monospacedDigit()
                             .foregroundStyle(.secondary)
                     }
-                    ProgressView(value: entry.share, total: 1.0)
-                        .tint(.teal)
+                    UsageBarView(fraction: entry.share, tint: Theme.codex, height: 5)
                 }
             }
         }
@@ -995,8 +1033,7 @@ private struct ExtraUsageRow: View {
                             .monospacedDigit()
                     }
                 }
-                ProgressView(value: (extra.utilization ?? 0) / 100.0, total: 1.0)
-                    .tint(.blue)
+                UsageBarView(fraction: (extra.utilization ?? 0) / 100.0, height: 7)
             }
         }
     }
@@ -1035,10 +1072,3 @@ private struct SetupThresholdSlider: View {
     }
 }
 
-private func colorForPct(_ pct: Double) -> Color {
-    switch pct {
-    case ..<0.60: return .green
-    case 0.60..<0.80: return .yellow
-    default: return .red
-    }
-}
