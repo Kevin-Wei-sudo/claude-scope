@@ -3,17 +3,23 @@
     <channel>
         <title>ClaudeScope</title>
         <item>
-            <title>0.4.6</title>
-            <pubDate>Thu, 06 Aug 2026 09:33:10 +0000</pubDate>
-            <sparkle:version>4006</sparkle:version>
-            <sparkle:shortVersionString>0.4.6</sparkle:shortVersionString>
+            <title>0.4.7</title>
+            <pubDate>Fri, 04 Sep 2026 23:52:49 +0000</pubDate>
+            <sparkle:version>4007</sparkle:version>
+            <sparkle:shortVersionString>0.4.7</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
             <description><![CDATA[<h2 dir="auto">Changes</h2>
 <ul dir="auto">
-<li>macOS: keep subscription windows when Codex CLI bills via API key</li>
+<li>macOS: visual refresh — theme, cards, hero number, custom bars</li>
+<li>monitor: normalize "Updated today/yesterday" stamps too</li>
+<li>macOS: announce official 7-day resets so a sudden drop reads as one</li>
+<li>monitor: update source snapshots [skip ci]</li>
+<li>monitor: update source snapshots [skip ci]</li>
+<li>monitor: update source snapshots [skip ci]</li>
+<li>Serve the appcast from main so Pages mode changes cannot break updates</li>
 </ul>
-<p dir="auto"><strong>Full Changelog</strong>: <a class="commit-link" href="https://github.com/Kevin-Wei-sudo/claude-scope/compare/v0.4.5...v0.4.6"><tt>v0.4.5...v0.4.6</tt></a></p>]]></description>
-            <enclosure url="https://github.com/Kevin-Wei-sudo/claude-scope/releases/download/v0.4.6/ClaudeScope.zip" length="4930481" type="application/octet-stream" sparkle:edSignature="O/SQpDz9aKLZllDwBfoK0X0vVrKpAOZcj7y/fQLZvNwugDLhNpUbxqPNweKa5jql+4Tvrh7yeAEbHxWqtMm1BA=="/>
+<p dir="auto"><strong>Full Changelog</strong>: <a class="commit-link" href="https://github.com/Kevin-Wei-sudo/claude-scope/compare/v0.4.6...v0.4.7"><tt>v0.4.6...v0.4.7</tt></a></p>]]></description>
+            <enclosure url="https://github.com/Kevin-Wei-sudo/claude-scope/releases/download/v0.4.7/ClaudeScope.zip" length="4942937" type="application/octet-stream" sparkle:edSignature="lmtwCC2bpOofoEgFsOZfq6nYXuujdohjW1h8l4BsFRhl5nxQ7yb0VkIbQNCCOfKJXpMA6mZDVC3IquN2pdutAA=="/>
         </item>
     </channel>
 </rss>
