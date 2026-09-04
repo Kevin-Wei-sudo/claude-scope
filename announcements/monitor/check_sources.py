@@ -52,9 +52,12 @@ WINDOW = 140  # chars of context kept around each keyword hit
 # The help center stamps articles with a relative time ("Updated this week" ->
 # "Updated over a week ago") that changes on its own and is not policy news.
 RELATIVE_TIME = re.compile(
-    r"Updated\s+(?:(?:over|about|almost)\s+)?"
+    r"Updated\s+(?:"
+    r"(?:(?:over|about|almost)\s+)?"
     r"(?:a|an|\d+|this|last|few)?\s*"
-    r"(?:seconds?|minutes?|hours?|days?|weeks?|months?|years?)(?:\s+ago)?",
+    r"(?:seconds?|minutes?|hours?|days?|weeks?|months?|years?)(?:\s+ago)?"
+    r"|today|yesterday"
+    r")",
     re.I,
 )
 
