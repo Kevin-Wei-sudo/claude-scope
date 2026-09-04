@@ -111,4 +111,44 @@ final class NotificationServiceTests: XCTestCase {
             ThresholdAlert(window: "Extra usage", pct: 75),
         ])
     }
+
+    // MARK: - 7-day reset detection
+
+    func testNoResetWithoutPreviousLevelOrWithSmallDrop() {
+        let now = Date(timeIntervalSince1970: 1_000_000)
+
+        XCTAssertNil(sevenDayResetKind(previousPct: nil, currentPct: 0, expectedReset: nil, now: now))
+        XCTAssertNil(sevenDayResetKind(previousPct: 8, currentPct: 0, expectedReset: nil, now: now))
+        XCTAssertNil(sevenDayResetKind(previousPct: 40, currentPct: 35, expectedReset: nil, now: now))
+    }
+
+    func testScheduledResetWhenExpectedTimeHasArrived() {
+        let now = Date(timeIntervalSince1970: 1_000_000)
+
+        // Reset time already passed, or lies within the polling slack.
+        XCTAssertEqual(
+            sevenDayResetKind(previousPct: 35, currentPct: 0, expectedReset: now.addingTimeInterval(-600), now: now),
+            .scheduled
+        )
+        XCTAssertEqual(
+            sevenDayResetKind(previousPct: 35, currentPct: 0, expectedReset: now.addingTimeInterval(3 * 3600), now: now),
+            .scheduled
+        )
+        // Unknown expected time still announces the reset.
+        XCTAssertEqual(
+            sevenDayResetKind(previousPct: 35, currentPct: 0, expectedReset: nil, now: now),
+            .scheduled
+        )
+    }
+
+    func testEarlyResetWhenWellBeforeExpectedTime() {
+        let now = Date(timeIntervalSince1970: 1_000_000)
+
+        // Advertised reset four days away, yet usage dropped to zero: the
+        // recent ~3-day cadence resets look exactly like this.
+        XCTAssertEqual(
+            sevenDayResetKind(previousPct: 35, currentPct: 0, expectedReset: now.addingTimeInterval(4 * 86400), now: now),
+            .early(hoursAhead: 96)
+        )
+    }
 }

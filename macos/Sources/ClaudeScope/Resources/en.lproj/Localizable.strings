@@ -82,6 +82,10 @@
 "notification.reset_soon.body" = "%@ resets in about 30 minutes.";
 "notification.reset_now.title" = "Budget reset";
 "notification.reset_now.body" = "%@ has reset.";
+"notification.7d_reset.title" = "7-day quota reset";
+"notification.7d_reset.body" = "The 7-day window went from %d%% to %d%% — a scheduled reset by Anthropic, not lost usage.";
+"notification.7d_reset_early.title" = "Anthropic reset your 7-day quota early";
+"notification.7d_reset_early.body" = "The 7-day window dropped from %d%% to %d%%, about %d hour(s) ahead of schedule. This is an official reset issued by Anthropic, not a tracking error.";
 "window.5hour" = "5-hour window";
 "window.7day" = "7-day window";
 "window.extra" = "Extra usage";

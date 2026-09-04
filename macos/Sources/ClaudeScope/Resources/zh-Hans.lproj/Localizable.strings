@@ -82,6 +82,10 @@
 "notification.reset_soon.body" = "%@ 约 30 分钟后重置。";
 "notification.reset_now.title" = "额度已重置";
 "notification.reset_now.body" = "%@ 已完成重置。";
+"notification.7d_reset.title" = "7 天额度已重置";
+"notification.7d_reset.body" = "7 天窗口 %d%% → %d%%，为官方按计划重置，不是用量异常。";
+"notification.7d_reset_early.title" = "官方提前重置了 7 天额度";
+"notification.7d_reset_early.body" = "7 天窗口从 %d%% 跌至 %d%%，比原定重置时间提前约 %d 小时。这是 Claude 官方下发的重置，不是用量统计异常。";
 "window.5hour" = "5 小时窗口";
 "window.7day" = "7 天窗口";
 "window.extra" = "额外用量";

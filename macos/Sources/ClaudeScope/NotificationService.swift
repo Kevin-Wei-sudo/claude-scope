@@ -44,6 +44,32 @@ func crossedThresholds(
     return alerts
 }
 
+enum SevenDayResetKind: Equatable {
+    case scheduled
+    case early(hoursAhead: Int)
+}
+
+/// Classifies a sudden 7-day utilization drop. The window never legitimately
+/// decreases, so a drop of 10+ points means Anthropic reset it — either on
+/// schedule, or (lately, with ~3-day cadences) well before the advertised
+/// resets_at, which is exactly when users suspect a tracking bug.
+func sevenDayResetKind(
+    previousPct: Double?,
+    currentPct: Double,
+    expectedReset: Date?,
+    now: Date
+) -> SevenDayResetKind? {
+    guard let previousPct, previousPct - currentPct >= 10 else { return nil }
+
+    if let expectedReset {
+        let aheadSeconds = expectedReset.timeIntervalSince(now)
+        if aheadSeconds > 6 * 60 * 60 {
+            return .early(hoursAhead: Int((aheadSeconds / 3600).rounded()))
+        }
+    }
+    return .scheduled
+}
+
 private class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
@@ -150,6 +176,45 @@ class NotificationService: ObservableObject {
 
         for alert in alerts {
             sendNotification(window: alert.window, pct: alert.pct)
+        }
+    }
+
+    /// Announces a detected 7-day reset so a sudden drop to zero reads as an
+    /// official reset instead of lost usage. Call before `checkAndNotify`,
+    /// which overwrites the previous level this comparison needs.
+    func checkSevenDayReset(pct7d: Double, previousExpectedReset: Date?, now: Date = Date()) {
+        guard resetRemindersEnabled else { return }
+
+        let currentPct = pct7d * 100
+        guard let kind = sevenDayResetKind(
+            previousPct: previousPct7d,
+            currentPct: currentPct,
+            expectedReset: previousExpectedReset,
+            now: now
+        ) else {
+            return
+        }
+        let previousPct = Int(round(previousPct7d ?? 0))
+
+        switch kind {
+        case .scheduled:
+            sendSimpleNotification(
+                identifier: "seven-day-reset",
+                titleKey: "notification.7d_reset.title",
+                titleFallback: "7-day quota reset",
+                bodyKey: "notification.7d_reset.body",
+                bodyFallback: "The 7-day window went from %d%% to %d%% — a scheduled reset by Anthropic, not lost usage.",
+                bodyArguments: [previousPct, Int(round(currentPct))]
+            )
+        case .early(let hoursAhead):
+            sendSimpleNotification(
+                identifier: "seven-day-reset",
+                titleKey: "notification.7d_reset_early.title",
+                titleFallback: "Anthropic reset your 7-day quota early",
+                bodyKey: "notification.7d_reset_early.body",
+                bodyFallback: "The 7-day window dropped from %d%% to %d%%, about %d hour(s) ahead of schedule. This is an official reset issued by Anthropic, not a tracking error.",
+                bodyArguments: [previousPct, Int(round(currentPct)), hoursAhead]
+            )
         }
     }
 

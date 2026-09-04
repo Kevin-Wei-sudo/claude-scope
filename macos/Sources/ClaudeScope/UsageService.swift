@@ -348,11 +348,13 @@ class UsageService: ObservableObject {
                 return
             }
             let decoded = try JSONDecoder().decode(UsageResponse.self, from: data)
+            let previousReset7d = usage?.sevenDay?.resetsAtDate
             let reconciled = decoded.reconciled(with: usage)
             usage = reconciled
             lastError = nil
             lastUpdated = Date()
             historyService?.recordDataPoint(pct5h: pct5h, pct7d: pct7d)
+            notificationService?.checkSevenDayReset(pct7d: pct7d, previousExpectedReset: previousReset7d)
             notificationService?.checkAndNotify(pct5h: pct5h, pct7d: pct7d, pctExtra: pctExtra)
             notificationService?.checkResetReminders(reset5h: reset5h, reset7d: reset7d)
             intelligenceService?.refresh(
