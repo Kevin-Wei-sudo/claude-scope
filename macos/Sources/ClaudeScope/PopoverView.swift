@@ -85,7 +85,7 @@ struct PopoverView: View {
 
     @ViewBuilder
     private var usageView: some View {
-        if codexService.hasDisplayableContent {
+        if codexService.hasDisplayableContent || codexService.needsConsent {
             Picker("", selection: $providerTabRaw) {
                 Text("Claude").tag("claude")
                 Text("Codex").tag("codex")
@@ -94,7 +94,11 @@ struct PopoverView: View {
             .labelsHidden()
         }
 
-        if providerTabRaw == "codex", codexService.hasDisplayableContent {
+        if providerTabRaw == "codex", codexService.needsConsent {
+            CodexConsentCard(language: appLanguage) { granted in
+                codexService.setConsent(granted: granted)
+            }
+        } else if providerTabRaw == "codex", codexService.hasDisplayableContent {
             CodexSection(
                 usage: codexService.usage,
                 localStats: codexService.localStats,
@@ -813,6 +817,43 @@ struct BurnRateRow: View {
             ))
             .font(.caption2)
             .foregroundStyle(.secondary)
+        }
+    }
+}
+
+private struct CodexConsentCard: View {
+    let language: AppLanguage
+    let onDecision: (Bool) -> Void
+
+    var body: some View {
+        SectionCard {
+            SectionHeader(
+                symbol: "lock.shield",
+                title: localizedString("codex.consent.title", fallback: "Codex CLI detected", language: language),
+                tint: Theme.codex
+            )
+            Text(localizedString(
+                "codex.consent.body",
+                fallback: "Show Codex usage here? ClaudeScope would read the local ~/.codex sign-in token and session logs. The token is only ever sent to the official OpenAI usage endpoint; this app has no servers and stores nothing elsewhere.",
+                language: language
+            ))
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+
+            HStack {
+                Button(localizedString("codex.consent.decline", fallback: "Not now", language: language)) {
+                    onDecision(false)
+                }
+                .buttonStyle(.borderless)
+                .font(.caption)
+                Spacer()
+                Button(localizedString("codex.consent.allow", fallback: "Allow", language: language)) {
+                    onDecision(true)
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.small)
+            }
         }
     }
 }

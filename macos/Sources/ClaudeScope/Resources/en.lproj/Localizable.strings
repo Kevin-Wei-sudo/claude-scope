@@ -59,6 +59,11 @@
 "codex.daily_trend" = "Daily trend";
 "codex.apikey_note_no_windows" = "Codex CLI bills via API key%@ — no subscription windows to track. Sign in with ChatGPT once and they will keep showing here even after switching back.";
 "codex.apikey_note_with_windows" = "Billing via API key%@ · windows below are your ChatGPT subscription";
+"codex.consent.title" = "Codex CLI detected";
+"codex.consent.body" = "Show Codex usage here? ClaudeScope would read the local ~/.codex sign-in token and session logs. The token is only ever sent to the official OpenAI usage endpoint; this app has no servers and stores nothing elsewhere.";
+"codex.consent.allow" = "Allow";
+"codex.consent.decline" = "Not now";
+"settings.codex_integration" = "Show Codex usage (reads local ~/.codex)";
 "value.off" = "Off";
 
 "settings.general" = "General";

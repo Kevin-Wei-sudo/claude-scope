@@ -59,6 +59,11 @@
 "codex.daily_trend" = "按天趋势";
 "codex.apikey_note_no_windows" = "Codex CLI 当前通过 API key%@ 按 token 计费，暂无订阅限额窗口。用 ChatGPT 登录一次后，即使切回 API key 也会继续显示订阅窗口。";
 "codex.apikey_note_with_windows" = "当前经 API key%@ 计费 · 下方为你的 ChatGPT 订阅限额窗口";
+"codex.consent.title" = "检测到 Codex CLI";
+"codex.consent.body" = "要在这里显示 Codex 用量吗？ClaudeScope 将读取本机 ~/.codex 的登录凭据与会话统计；凭据只会发往 OpenAI 官方用量接口。本应用没有服务器，也不会把数据存到别处。";
+"codex.consent.allow" = "允许";
+"codex.consent.decline" = "暂不启用";
+"settings.codex_integration" = "显示 Codex 用量（读取本机 ~/.codex）";
 "value.off" = "关闭";
 
 "settings.general" = "常规";

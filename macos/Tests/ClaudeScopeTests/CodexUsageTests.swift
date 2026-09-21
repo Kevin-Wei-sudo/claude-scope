@@ -291,11 +291,12 @@ final class CodexUsageTests: XCTestCase {
         XCTAssertNil(CodexUsageParser.providerName(fromConfigTOML: "model = \"gpt\""))
     }
 
-    func testTokenCacheRoundTripAndPermissions() throws {
+    func testTokenCacheStoresInVaultWithoutPlaintextFile() throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: directory) }
-        let cache = CodexTokenCache(directoryURL: directory)
+        let vault = InMemoryTokenVault()
+        let cache = CodexTokenCache(directoryURL: directory, vault: vault)
 
         XCTAssertNil(cache.load())
 
@@ -305,20 +306,89 @@ final class CodexUsageTests: XCTestCase {
         )
         cache.save(tokens)
 
-        let loaded = cache.load()
-        XCTAssertEqual(loaded?.accessToken, "at")
-        XCTAssertEqual(loaded?.refreshToken, "rt")
-
-        let path = directory.appendingPathComponent("codex-chatgpt-tokens.json").path
-        let permissions = try FileManager.default.attributesOfItem(atPath: path)[.posixPermissions] as? Int
-        XCTAssertEqual(permissions, 0o600, "another app's tokens must not be world-readable")
+        XCTAssertEqual(cache.load()?.accessToken, "at")
+        XCTAssertNotNil(vault.readData(account: CodexTokenCache.vaultAccount))
+        XCTAssertFalse(FileManager.default.fileExists(
+            atPath: directory.appendingPathComponent("codex-chatgpt-tokens.json").path))
 
         cache.clear()
         XCTAssertNil(cache.load())
     }
 
+    func testTokenCacheFallsBackToProtectedFileWhenVaultRefuses() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let vault = InMemoryTokenVault()
+        vault.failsWrites = true
+        let cache = CodexTokenCache(directoryURL: directory, vault: vault)
+
+        cache.save(CachedCodexTokens(accessToken: "at", refreshToken: nil, accountID: nil, cachedAt: Date()))
+
+        let path = directory.appendingPathComponent("codex-chatgpt-tokens.json").path
+        XCTAssertTrue(FileManager.default.fileExists(atPath: path))
+        let permissions = try FileManager.default.attributesOfItem(atPath: path)[.posixPermissions] as? Int
+        XCTAssertEqual(permissions, 0o600, "another app's tokens must not be world-readable")
+        XCTAssertEqual(cache.load()?.accessToken, "at")
+    }
+
     func testRejectsGarbage() {
         XCTAssertNil(CodexUsageParser.usage(fromAPIResponse: Data("nope".utf8)))
         XCTAssertNil(CodexUsageParser.usage(fromSessionRateLimits: [:]))
+    }
+
+    // MARK: - Consent
+
+    @MainActor
+    func testConsentGatesCodexIntegration() throws {
+        UserDefaults.standard.removeObject(forKey: "codexIntegrationConsent")
+        defer { UserDefaults.standard.removeObject(forKey: "codexIntegrationConsent") }
+
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try Data(#"{"auth_mode":"apikey","OPENAI_API_KEY":"sk-x"}"#.utf8)
+            .write(to: directory.appendingPathComponent("auth.json"))
+
+        let service = CodexUsageService(
+            codexDirectory: directory,
+            tokenCache: CodexTokenCache(directoryURL: directory, vault: InMemoryTokenVault())
+        )
+
+        XCTAssertTrue(service.isAvailable)
+        XCTAssertTrue(service.needsConsent, "present but undecided -> ask first")
+        XCTAssertFalse(service.isEnabled)
+
+        service.setConsent(granted: false)
+        XCTAssertFalse(service.needsConsent)
+        XCTAssertFalse(service.isEnabled)
+        XCTAssertFalse(service.hasDisplayableContent, "declining hides the tab")
+
+        service.setConsent(granted: true)
+        XCTAssertTrue(service.isEnabled)
+
+        // The decision must survive a relaunch.
+        let relaunched = CodexUsageService(
+            codexDirectory: directory,
+            tokenCache: CodexTokenCache(directoryURL: directory, vault: InMemoryTokenVault())
+        )
+        XCTAssertTrue(relaunched.isEnabled)
+        XCTAssertFalse(relaunched.needsConsent)
+    }
+
+    @MainActor
+    func testNoConsentPromptWithoutCodexInstalled() {
+        UserDefaults.standard.removeObject(forKey: "codexIntegrationConsent")
+        defer { UserDefaults.standard.removeObject(forKey: "codexIntegrationConsent") }
+
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let service = CodexUsageService(
+            codexDirectory: directory,
+            tokenCache: CodexTokenCache(directoryURL: directory, vault: InMemoryTokenVault())
+        )
+
+        XCTAssertFalse(service.needsConsent)
     }
 }

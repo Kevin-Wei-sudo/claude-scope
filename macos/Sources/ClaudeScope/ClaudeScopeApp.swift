@@ -68,6 +68,7 @@ struct ClaudeScopeApp: App {
 
         Settings {
             SettingsWindowContent(
+                codexService: codexService,
                 service: service,
                 notificationService: notificationService,
                 intelligenceService: intelligenceService

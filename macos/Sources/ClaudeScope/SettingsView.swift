@@ -2,6 +2,7 @@ import SwiftUI
 import ServiceManagement
 
 struct SettingsWindowContent: View {
+    @ObservedObject var codexService: CodexUsageService
     @ObservedObject var service: UsageService
     @ObservedObject var notificationService: NotificationService
     @ObservedObject var intelligenceService: UsageIntelligenceService
@@ -68,6 +69,22 @@ struct SettingsWindowContent: View {
                     localizedString("settings.usage_intelligence_enabled", fallback: "Usage intelligence", language: appLanguage),
                     isOn: $intelligenceService.intelligenceEnabled
                 )
+            }
+
+            if codexService.isAvailable {
+                Section("Codex") {
+                    Toggle(
+                        localizedString(
+                            "settings.codex_integration",
+                            fallback: "Show Codex usage (reads local ~/.codex)",
+                            language: appLanguage
+                        ),
+                        isOn: Binding(
+                            get: { codexService.consent == .granted },
+                            set: { codexService.setConsent(granted: $0) }
+                        )
+                    )
+                }
             }
 
             if service.isAuthenticated {

@@ -8,6 +8,11 @@ import Combine
 /// OpenAI's own usage endpoint — never stored or sent anywhere else. When the
 /// API is unreachable (expired token, offline) the latest rate-limit snapshot
 /// recorded in ~/.codex/sessions is shown instead, marked as stale.
+enum CodexConsent: String {
+    case granted
+    case denied
+}
+
 @MainActor
 final class CodexUsageService: ObservableObject {
     @Published private(set) var usage: CodexUsage?
@@ -18,6 +23,8 @@ final class CodexUsageService: ObservableObject {
     @Published private(set) var billsByAPIKey = false
     /// Provider named in config.toml when billing via API key ("deepseek").
     @Published private(set) var apiKeyProvider: String?
+    /// Whether the user has allowed reading ~/.codex; nil until they decide.
+    @Published private(set) var consent: CodexConsent?
 
     /// nil while Codex CLI is not installed (or unreadable in sandbox) —
     /// the UI hides the whole section then.
@@ -30,6 +37,33 @@ final class CodexUsageService: ObservableObject {
     /// offline snapshot, local stats, or an API-key-mode explanation.
     var hasDisplayableContent: Bool {
         usage != nil || localStats != nil || billsByAPIKey
+    }
+
+    /// Codex CLI is present but the user has not decided yet — show the
+    /// consent card instead of silently reading their credentials.
+    var needsConsent: Bool {
+        isAvailable && consent == nil
+    }
+
+    var isEnabled: Bool {
+        isAvailable && consent == .granted
+    }
+
+    private static let consentKey = "codexIntegrationConsent"
+
+    func setConsent(granted: Bool) {
+        consent = granted ? .granted : .denied
+        UserDefaults.standard.set(consent?.rawValue, forKey: Self.consentKey)
+        if granted {
+            startPolling()
+        } else {
+            timer = nil
+            usage = nil
+            localStats = nil
+            billsByAPIKey = false
+            apiKeyProvider = nil
+            isStale = false
+        }
     }
 
     private static let usageEndpoint = URL(string: "https://chatgpt.com/backend-api/wham/usage")!
@@ -52,10 +86,11 @@ final class CodexUsageService: ObservableObject {
         self.codexDirectory = codexDirectory
         self.session = session
         self.tokenCache = tokenCache
+        consent = UserDefaults.standard.string(forKey: Self.consentKey).flatMap(CodexConsent.init)
     }
 
     func startPolling() {
-        guard isAvailable else { return }
+        guard isEnabled else { return }
         let minutes = UserDefaults.standard.integer(forKey: "pollingMinutes")
         let interval = TimeInterval(max(minutes, 5) * 60)
         timer = Timer.publish(every: interval, on: .main, in: .common)
@@ -67,7 +102,7 @@ final class CodexUsageService: ObservableObject {
     }
 
     func refresh() async {
-        guard isAvailable else { return }
+        guard isEnabled else { return }
 
         refreshLocalStatsIfStale()
 
