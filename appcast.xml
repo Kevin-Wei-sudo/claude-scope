@@ -3,23 +3,19 @@
     <channel>
         <title>ClaudeScope</title>
         <item>
-            <title>0.4.7</title>
-            <pubDate>Fri, 04 Sep 2026 23:52:49 +0000</pubDate>
-            <sparkle:version>4007</sparkle:version>
-            <sparkle:shortVersionString>0.4.7</sparkle:shortVersionString>
+            <title>0.5.0</title>
+            <pubDate>Mon, 21 Sep 2026 05:30:49 +0000</pubDate>
+            <sparkle:version>5000</sparkle:version>
+            <sparkle:shortVersionString>0.5.0</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
             <description><![CDATA[<h2 dir="auto">Changes</h2>
 <ul dir="auto">
-<li>macOS: visual refresh — theme, cards, hero number, custom bars</li>
-<li>monitor: normalize "Updated today/yesterday" stamps too</li>
-<li>macOS: announce official 7-day resets so a sudden drop reads as one</li>
-<li>monitor: update source snapshots [skip ci]</li>
-<li>monitor: update source snapshots [skip ci]</li>
-<li>monitor: update source snapshots [skip ci]</li>
-<li>Serve the appcast from main so Pages mode changes cannot break updates</li>
+<li>macOS: ask before reading Codex CLI's local credentials</li>
+<li>macOS: store OAuth tokens in the Keychain instead of plaintext files</li>
+<li>appcast: v0.4.7 [skip ci]</li>
 </ul>
-<p dir="auto"><strong>Full Changelog</strong>: <a class="commit-link" href="https://github.com/Kevin-Wei-sudo/claude-scope/compare/v0.4.6...v0.4.7"><tt>v0.4.6...v0.4.7</tt></a></p>]]></description>
-            <enclosure url="https://github.com/Kevin-Wei-sudo/claude-scope/releases/download/v0.4.7/ClaudeScope.zip" length="4942937" type="application/octet-stream" sparkle:edSignature="lmtwCC2bpOofoEgFsOZfq6nYXuujdohjW1h8l4BsFRhl5nxQ7yb0VkIbQNCCOfKJXpMA6mZDVC3IquN2pdutAA=="/>
+<p dir="auto"><strong>Full Changelog</strong>: <a class="commit-link" href="https://github.com/Kevin-Wei-sudo/claude-scope/compare/v0.4.7...v0.5.0"><tt>v0.4.7...v0.5.0</tt></a></p>]]></description>
+            <enclosure url="https://github.com/Kevin-Wei-sudo/claude-scope/releases/download/v0.5.0/ClaudeScope.zip" length="4962689" type="application/octet-stream" sparkle:edSignature="zkUbYaKGpuiwtYWsvAs5djvuPNI+F6pECLEewuWN6Je8u44f+L2Ymr18AHoCDjKsuLROCM5vNQp9YQcYEkm8CA=="/>
         </item>
     </channel>
 </rss>
