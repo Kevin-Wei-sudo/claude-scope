@@ -23,7 +23,10 @@ struct StoredCredentials: Codable, Equatable {
 }
 
 struct StoredCredentialsStore {
+    static let vaultAccount = "claude-oauth-credentials"
+
     private let fileManager: FileManager
+    private let vault: TokenVault
     let directoryURL: URL
     let credentialsFileURL: URL
     let legacyTokenFileURL: URL
@@ -34,9 +37,11 @@ struct StoredCredentialsStore {
     init(
         directoryURL: URL = AppPaths.credentialsDirectoryURL,
         legacyDirectoryURL: URL = AppPaths.legacyCredentialsDirectoryURL,
-        fileManager: FileManager = .default
+        fileManager: FileManager = .default,
+        vault: TokenVault = KeychainTokenVault()
     ) {
         self.fileManager = fileManager
+        self.vault = vault
         self.directoryURL = directoryURL
         self.credentialsFileURL = directoryURL.appendingPathComponent("credentials.json")
         self.legacyTokenFileURL = directoryURL.appendingPathComponent("token")
@@ -46,16 +51,34 @@ struct StoredCredentialsStore {
     }
 
     func save(_ credentials: StoredCredentials) throws {
-        try ensureDirectoryExists()
         let data = try Self.encoder.encode(credentials)
-        try data.write(to: credentialsFileURL, options: .atomic)
-        try fileManager.setAttributes([.posixPermissions: 0o600], ofItemAtPath: credentialsFileURL.path)
+
+        // Keychain is the primary store; the 0600 file remains only as a
+        // fallback for a keychain that refuses to persist, so a save never
+        // silently drops the user's session.
+        if vault.writeData(data, account: Self.vaultAccount) {
+            try? fileManager.removeItem(at: credentialsFileURL)
+        } else {
+            try ensureDirectoryExists()
+            try data.write(to: credentialsFileURL, options: .atomic)
+            try fileManager.setAttributes([.posixPermissions: 0o600], ofItemAtPath: credentialsFileURL.path)
+        }
         try? fileManager.removeItem(at: legacyTokenFileURL)
     }
 
     func load(defaultScopes: [String]) -> StoredCredentials? {
+        if let data = vault.readData(account: Self.vaultAccount),
+           let credentials = try? Self.decoder.decode(StoredCredentials.self, from: data) {
+            return credentials
+        }
+
+        // Pre-keychain installs keep credentials.json — adopt it into the
+        // keychain once and remove the plaintext copy.
         if let data = try? Data(contentsOf: credentialsFileURL),
            let credentials = try? Self.decoder.decode(StoredCredentials.self, from: data) {
+            if vault.writeData(data, account: Self.vaultAccount) {
+                try? fileManager.removeItem(at: credentialsFileURL)
+            }
             return credentials
         }
 
@@ -92,6 +115,7 @@ struct StoredCredentialsStore {
     }
 
     func delete() {
+        vault.delete(account: Self.vaultAccount)
         try? fileManager.removeItem(at: credentialsFileURL)
         try? fileManager.removeItem(at: legacyTokenFileURL)
         try? fileManager.removeItem(at: legacyCredentialsFileURL)
