@@ -3,19 +3,18 @@
     <channel>
         <title>ClaudeScope</title>
         <item>
-            <title>0.5.0</title>
-            <pubDate>Mon, 21 Sep 2026 05:30:49 +0000</pubDate>
-            <sparkle:version>5000</sparkle:version>
-            <sparkle:shortVersionString>0.5.0</sparkle:shortVersionString>
+            <title>0.5.1</title>
+            <pubDate>Tue, 22 Sep 2026 07:44:19 +0000</pubDate>
+            <sparkle:version>5001</sparkle:version>
+            <sparkle:shortVersionString>0.5.1</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
             <description><![CDATA[<h2 dir="auto">Changes</h2>
 <ul dir="auto">
-<li>macOS: ask before reading Codex CLI's local credentials</li>
-<li>macOS: store OAuth tokens in the Keychain instead of plaintext files</li>
-<li>appcast: v0.4.7 [skip ci]</li>
+<li>macOS: explain the empty Codex tab instead of showing nothing</li>
+<li>appcast: v0.5.0 [skip ci]</li>
 </ul>
-<p dir="auto"><strong>Full Changelog</strong>: <a class="commit-link" href="https://github.com/Kevin-Wei-sudo/claude-scope/compare/v0.4.7...v0.5.0"><tt>v0.4.7...v0.5.0</tt></a></p>]]></description>
-            <enclosure url="https://github.com/Kevin-Wei-sudo/claude-scope/releases/download/v0.5.0/ClaudeScope.zip" length="4962689" type="application/octet-stream" sparkle:edSignature="zkUbYaKGpuiwtYWsvAs5djvuPNI+F6pECLEewuWN6Je8u44f+L2Ymr18AHoCDjKsuLROCM5vNQp9YQcYEkm8CA=="/>
+<p dir="auto"><strong>Full Changelog</strong>: <a class="commit-link" href="https://github.com/Kevin-Wei-sudo/claude-scope/compare/v0.5.0...v0.5.1"><tt>v0.5.0...v0.5.1</tt></a></p>]]></description>
+            <enclosure url="https://github.com/Kevin-Wei-sudo/claude-scope/releases/download/v0.5.1/ClaudeScope.zip" length="4963349" type="application/octet-stream" sparkle:edSignature="x4us/aovKvUdCvMk2qAJYiD8o5yNiVrfzhT8cRn90B4ROjtq4uVelUp9b3MQvQESk6hrWQ1YZ/wl0i6CCOykAg=="/>
         </item>
     </channel>
 </rss>
