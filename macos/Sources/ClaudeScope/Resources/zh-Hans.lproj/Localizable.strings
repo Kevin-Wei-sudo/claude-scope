@@ -63,6 +63,7 @@
 "codex.consent.body" = "要在这里显示 Codex 用量吗？ClaudeScope 将读取本机 ~/.codex 的登录凭据与会话统计；凭据只会发往 OpenAI 官方用量接口。本应用没有服务器，也不会把数据存到别处。";
 "codex.consent.allow" = "允许";
 "codex.consent.decline" = "暂不启用";
+"codex.no_recent_sessions" = "最近 7 天本机没有 Codex 会话记录——下次运行 codex 后这里会出现统计。";
 "settings.codex_integration" = "显示 Codex 用量（读取本机 ~/.codex）";
 "value.off" = "关闭";
 

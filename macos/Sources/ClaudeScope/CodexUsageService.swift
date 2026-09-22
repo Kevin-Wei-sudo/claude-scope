@@ -25,6 +25,9 @@ final class CodexUsageService: ObservableObject {
     @Published private(set) var apiKeyProvider: String?
     /// Whether the user has allowed reading ~/.codex; nil until they decide.
     @Published private(set) var consent: CodexConsent?
+    /// True once a local-stats scan has finished, so the UI can tell
+    /// "nothing found" apart from "still scanning".
+    @Published private(set) var statsScanCompleted = false
 
     /// nil while Codex CLI is not installed (or unreadable in sandbox) —
     /// the UI hides the whole section then.
@@ -277,6 +280,7 @@ final class CodexUsageService: ObservableObject {
             }.value
 
             self.localStats = stats.isEmpty ? nil : stats
+            self.statsScanCompleted = true
         }
     }
 

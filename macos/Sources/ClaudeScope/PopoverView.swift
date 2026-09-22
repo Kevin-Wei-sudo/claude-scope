@@ -102,6 +102,7 @@ struct PopoverView: View {
             CodexSection(
                 usage: codexService.usage,
                 localStats: codexService.localStats,
+                statsScanCompleted: codexService.statsScanCompleted,
                 billsByAPIKey: codexService.billsByAPIKey,
                 apiKeyProvider: codexService.apiKeyProvider,
                 isStale: codexService.isStale,
@@ -861,6 +862,7 @@ private struct CodexConsentCard: View {
 private struct CodexSection: View {
     let usage: CodexUsage?
     let localStats: CodexLocalStats?
+    let statsScanCompleted: Bool
     let billsByAPIKey: Bool
     let apiKeyProvider: String?
     let isStale: Bool
@@ -959,6 +961,17 @@ private struct CodexSection: View {
                 )
                 .font(.caption)
                 .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            }
+
+            if localStats == nil, statsScanCompleted {
+                Text(localizedString(
+                    "codex.no_recent_sessions",
+                    fallback: "No Codex sessions on this Mac in the last 7 days — stats will appear after the next codex run.",
+                    language: language
+                ))
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
                 .fixedSize(horizontal: false, vertical: true)
             }
 

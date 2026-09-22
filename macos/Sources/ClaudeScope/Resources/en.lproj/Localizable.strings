@@ -63,6 +63,7 @@
 "codex.consent.body" = "Show Codex usage here? ClaudeScope would read the local ~/.codex sign-in token and session logs. The token is only ever sent to the official OpenAI usage endpoint; this app has no servers and stores nothing elsewhere.";
 "codex.consent.allow" = "Allow";
 "codex.consent.decline" = "Not now";
+"codex.no_recent_sessions" = "No Codex sessions on this Mac in the last 7 days — stats will appear after the next codex run.";
 "settings.codex_integration" = "Show Codex usage (reads local ~/.codex)";
 "value.off" = "Off";
 
